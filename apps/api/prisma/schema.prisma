@@ -1,0 +1,349 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTENTICAÇÃO E USUÁRIOS
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  avatar    String?
+  
+  // Dados do freelancer
+  phone     String?
+  cpf       String?  @unique
+  cnpj      String?  @unique
+  
+  // Configurações
+  company   String?  // Nome da empresa/MEI
+  bio       String?  @db.Text
+  
+  // Plano e assinatura
+  plan      Plan     @default(FREE)
+  stripeCustomerId String? @unique
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relações
+  clientes   Cliente[]
+  orcamentos Orcamento[]
+  projetos   Projeto[]
+  pagamentos Pagamento[]
+  templates  Template[]
+  
+  @@map("users")
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+// ============================================
+// CLIENTES
+// ============================================
+
+model Cliente {
+  id        String   @id @default(cuid())
+  
+  // Dados básicos
+  name      String
+  email     String
+  phone     String?
+  
+  // Dados da empresa (se for PJ)
+  company   String?
+  cnpj      String?
+  
+  // Endereço
+  address   String?
+  city      String?
+  state     String?
+  zipCode   String?
+  
+  // Observações
+  notes     String?  @db.Text
+  
+  // Status
+  active    Boolean  @default(true)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relações
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orcamentos Orcamento[]
+  projetos   Projeto[]
+  
+  @@map("clientes")
+  @@index([userId])
+}
+
+// ============================================
+// ORÇAMENTOS
+// ============================================
+
+model Orcamento {
+  id          String   @id @default(cuid())
+  
+  // Identificação
+  number      String   // ORC-001, ORC-002...
+  title       String
+  description String   @db.Text
+  
+  // Valores
+  value       Decimal  @db.Decimal(10, 2)
+  
+  // Prazos
+  estimatedDays Int?
+  validUntil    DateTime?
+  
+  // Status
+  status      OrcamentoStatus @default(AGUARDANDO)
+  
+  // Observações
+  notes       String?  @db.Text
+  
+  // Arquivos
+  attachments Json?    // Array de URLs
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sentAt      DateTime? // Quando foi enviado
+  approvedAt  DateTime? // Quando foi aprovado
+  
+  // Relações
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  
+  projeto     Projeto? // Quando aprovado vira projeto
+  
+  @@map("orcamentos")
+  @@index([userId])
+  @@index([clienteId])
+  @@index([status])
+}
+
+enum OrcamentoStatus {
+  AGUARDANDO    // Aguardando elaboração do orçamento
+  ENVIADO       // Orçamento enviado ao cliente
+  APROVADO      // Cliente aprovou
+  RECUSADO      // Cliente recusou
+  EXPIRADO      // Passou da validade
+}
+
+// ============================================
+// PROJETOS
+// ============================================
+
+model Projeto {
+  id          String   @id @default(cuid())
+  
+  // Identificação
+  number      String   // PRJ-001, PRJ-002...
+  title       String
+  description String   @db.Text
+  
+  // Valores
+  value       Decimal  @db.Decimal(10, 2)
+  
+  // Prazos
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  
+  // Status
+  status      ProjetoStatus @default(EM_ANDAMENTO)
+  progress    Int      @default(0) // 0-100%
+  
+  // Observações
+  notes       String?  @db.Text
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  completedAt DateTime?
+  
+  // Relações
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  
+  orcamentoId String?  @unique
+  orcamento   Orcamento? @relation(fields: [orcamentoId], references: [id])
+  
+  milestones  Milestone[]
+  pagamentos  Pagamento[]
+  arquivos    Arquivo[]
+  
+  @@map("projetos")
+  @@index([userId])
+  @@index([clienteId])
+  @@index([status])
+}
+
+enum ProjetoStatus {
+  EM_ANDAMENTO
+  PAUSADO
+  CONCLUIDO
+  CANCELADO
+}
+
+// ============================================
+// MILESTONES (Etapas do Projeto)
+// ============================================
+
+model Milestone {
+  id          String   @id @default(cuid())
+  
+  title       String
+  description String?  @db.Text
+  
+  // Ordem
+  order       Int
+  
+  // Status
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relações
+  projetoId   String
+  projeto     Projeto  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  
+  @@map("milestones")
+  @@index([projetoId])
+}
+
+// ============================================
+// PAGAMENTOS
+// ============================================
+
+model Pagamento {
+  id          String   @id @default(cuid())
+  
+  // Identificação
+  description String
+  
+  // Valores
+  value       Decimal  @db.Decimal(10, 2)
+  
+  // Datas
+  dueDate     DateTime // Data prevista
+  paidAt      DateTime? // Data que foi pago
+  
+  // Status
+  status      PagamentoStatus @default(PENDENTE)
+  
+  // Método de pagamento
+  method      String?  // Pix, Transferência, Boleto, etc
+  
+  // Observações
+  notes       String?  @db.Text
+  
+  // Comprovante
+  receipt     String?  // URL do comprovante
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relações
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  projetoId   String
+  projeto     Projeto  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  
+  @@map("pagamentos")
+  @@index([userId])
+  @@index([projetoId])
+  @@index([status])
+}
+
+enum PagamentoStatus {
+  PENDENTE
+  PAGO
+  ATRASADO
+  CANCELADO
+}
+
+// ============================================
+// ARQUIVOS
+// ============================================
+
+model Arquivo {
+  id          String   @id @default(cuid())
+  
+  name        String
+  url         String
+  size        Int      // Tamanho em bytes
+  type        String   // MIME type
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  
+  // Relações
+  projetoId   String
+  projeto     Projeto  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  
+  @@map("arquivos")
+  @@index([projetoId])
+}
+
+// ============================================
+// TEMPLATES (Propostas, Contratos, etc)
+// ============================================
+
+model Template {
+  id          String   @id @default(cuid())
+  
+  name        String
+  type        TemplateType
+  content     String   @db.Text // HTML ou Markdown
+  
+  // Status
+  active      Boolean  @default(true)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relações
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("templates")
+  @@index([userId])
+  @@index([type])
+}
+
+enum TemplateType {
+  PROPOSTA
+  CONTRATO
+  RECIBO
+}
