@@ -1,7 +1,8 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import axios from 'axios';
 import api from '@/lib/api';
 import { LoginInput, RegisterInput } from '@/lib/validations/auth';
 
@@ -18,10 +19,12 @@ interface AuthState {
     user: User | null;
     token: string | null;
     isLoading: boolean;
+    isHydrated: boolean;
     login: (data: LoginInput) => Promise<void>;
     register: (data: RegisterInput) => Promise<void>;
     logout: () => void;
     setUser: (user: User) => void;
+    setHydrated: () => void;
 }
 
 export const useAuth = create<AuthState>()(
@@ -30,6 +33,9 @@ export const useAuth = create<AuthState>()(
             user: null,
             token: null,
             isLoading: false,
+            isHydrated: false,
+
+            setHydrated: () => set({ isHydrated: true }),
 
             login: async (data: LoginInput) => {
                 set({ isLoading: true });
@@ -39,9 +45,12 @@ export const useAuth = create<AuthState>()(
 
                     localStorage.setItem('token', token);
                     set({ user, token, isLoading: false });
-                } catch (error: unknown) {
+                } catch (error) {
                     set({ isLoading: false });
-                    throw new Error(error instanceof Error ? error.message : 'Erro ao fazer login');
+                    if (axios.isAxiosError(error)) {
+                        throw new Error(error.response?.data?.error || 'Erro ao fazer login');
+                    }
+                    throw new Error('Erro ao fazer login');
                 }
             },
 
@@ -53,9 +62,12 @@ export const useAuth = create<AuthState>()(
 
                     localStorage.setItem('token', token);
                     set({ user, token, isLoading: false });
-                } catch (error: unknown) {
+                } catch (error) {
                     set({ isLoading: false });
-                    throw new Error(error instanceof Error ? error.message : 'Erro ao criar conta');
+                    if (axios.isAxiosError(error)) {
+                        throw new Error(error.response?.data?.error || 'Erro ao criar conta');
+                    }
+                    throw new Error('Erro ao criar conta');
                 }
             },
 
@@ -68,6 +80,10 @@ export const useAuth = create<AuthState>()(
         }),
         {
             name: 'auth-storage',
+            storage: createJSONStorage(() => localStorage),
+            onRehydrateStorage: () => (state) => {
+                state?.setHydrated();
+            },
         }
     )
 );

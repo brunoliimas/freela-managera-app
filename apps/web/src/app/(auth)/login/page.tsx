@@ -53,7 +53,7 @@ export default function LoginPage() {
                 </CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmit(onSubmit)}>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 mb-4">
                     <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
                         <Input
