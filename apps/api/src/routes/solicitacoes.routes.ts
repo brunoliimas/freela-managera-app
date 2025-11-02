@@ -12,9 +12,9 @@ import { authMiddleware } from '../middlewares/auth.middleware';
 const router = Router();
 
 // Rotas PÚBLICAS (sem autenticação)
-router.post('/public', createSolicitacao);
-router.get('/public/cliente/cnpj/:cnpj', findClienteByCnpj);
-router.post('/public/cliente', createClientePublic);
+router.post('/solicitar', createSolicitacao);
+router.get('/cliente/buscar-cnpj/:cnpj', findClienteByCnpj);
+router.post('/cliente/cadastrar', createClientePublic);
 
 // Rotas PRIVADAS (com autenticação)
 router.get('/', authMiddleware, getSolicitacoes);
