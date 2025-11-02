@@ -7,15 +7,18 @@ import {
     FolderKanban,
     DollarSign,
     TrendingUp,
-    Clock
+    Clock,
+    Bell
 } from 'lucide-react';
 import api from '@/lib/api';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface DashboardStats {
     clientes: {
@@ -34,6 +37,10 @@ interface DashboardStats {
         aprovados: number;
         taxaConversao: string;
     };
+    solicitacoes: {
+        total: number;
+        novas: number;
+    };
     financeiro: {
         faturamentoTotal: number;
         recebido: number;
@@ -42,26 +49,29 @@ interface DashboardStats {
         pagamentosPagos: number;
     };
     recentes: {
-        projetos: Array<{
-            id: string;
+        projetos: {
+            id: string | number;
             title: string;
-            value: number;
+            cliente: { name: string };
+            createdAt: string | Date;
             status: string;
-            createdAt: string;
-            cliente: {
-                name: string;
-            };
-        }>;
-        orcamentos: Array<{
-            id: string;
+            value?: number;
+        }[];
+        orcamentos: {
+            id: string | number;
             title: string;
-            value: number;
+            cliente: { name: string };
+            createdAt: string | Date;
             status: string;
-            createdAt: string;
-            cliente: {
-                name: string;
-            };
-        }>;
+            value?: number;
+        }[];
+        solicitacoes: {
+            id: string | number;
+            title: string;
+            cliente: { name: string };
+            createdAt: string | Date;
+            status: string;
+        }[];
     };
 }
 
@@ -74,6 +84,9 @@ const statusColors: Record<string, string> = {
     ENVIADO: 'bg-blue-500',
     APROVADO: 'bg-green-500',
     RECUSADO: 'bg-red-500',
+    NOVA: 'bg-orange-500',
+    ANALISANDO: 'bg-blue-500',
+    ORCAMENTO_ENVIADO: 'bg-green-500',
 };
 
 const statusLabels: Record<string, string> = {
@@ -85,9 +98,13 @@ const statusLabels: Record<string, string> = {
     ENVIADO: 'Enviado',
     APROVADO: 'Aprovado',
     RECUSADO: 'Recusado',
+    NOVA: 'Nova',
+    ANALISANDO: 'Analisando',
+    ORCAMENTO_ENVIADO: 'Orçamento Enviado',
 };
 
 export default function DashboardPage() {
+    const router = useRouter();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -97,6 +114,7 @@ export default function DashboardPage() {
 
     const fetchStats = async () => {
         try {
+            setLoading(true);
             const response = await api.get('/dashboard/stats');
             setStats(response.data);
         } catch (error) {
@@ -135,8 +153,39 @@ export default function DashboardPage() {
                 </p>
             </div>
 
+            {/* Alerta de Novas Solicitações */}
+            {stats.solicitacoes.novas > 0 && (
+                <Card className="border-orange-200 bg-orange-50">
+                    <CardContent className="pt-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Bell className="h-5 w-5 text-orange-600" />
+                                <div>
+                                    <p className="font-semibold text-orange-900">
+                                        {stats.solicitacoes.novas} {stats.solicitacoes.novas === 1 ? 'nova solicitação' : 'novas solicitações'}
+                                    </p>
+                                    <p className="text-sm text-orange-700">
+                                        Clientes aguardando orçamento
+                                    </p>
+                                </div>
+                            </div>
+                            <Button onClick={() => router.push('/solicitacoes')}>
+                                Ver Solicitações
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard
+                    title="Novas Solicitações"
+                    value={stats.solicitacoes.novas}
+                    description={`${stats.solicitacoes.total} total`}
+                    icon={Bell}
+                />
+
                 <StatCard
                     title="Clientes Ativos"
                     value={stats.clientes.ativos}
@@ -149,13 +198,6 @@ export default function DashboardPage() {
                     value={stats.projetos.emAndamento}
                     description={`${stats.projetos.concluidos} concluídos`}
                     icon={FolderKanban}
-                />
-
-                <StatCard
-                    title="Orçamentos Pendentes"
-                    value={stats.orcamentos.aguardando + stats.orcamentos.enviados}
-                    description={`${stats.orcamentos.taxaConversao} taxa de conversão`}
-                    icon={FileText}
                 />
 
                 <StatCard
@@ -199,6 +241,46 @@ export default function DashboardPage() {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Solicitações Recentes */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Bell size={20} />
+                            Solicitações Recentes
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {stats.recentes.solicitacoes.length === 0 ? (
+                            <p className="text-sm text-slate-500 text-center py-8">
+                                Nenhuma solicitação ainda
+                            </p>
+                        ) : (
+                            <div className="space-y-4">
+                                {stats.recentes.solicitacoes.map((solicitacao) => (
+                                    <div
+                                        key={solicitacao.id}
+                                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
+                                        onClick={() => router.push(`/solicitacoes/${solicitacao.id}`)}
+                                    >
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium truncate">{solicitacao.title}</p>
+                                            <p className="text-sm text-slate-600 truncate">
+                                                {solicitacao.cliente.name}
+                                            </p>
+                                            <p className="text-xs text-slate-500 mt-1">
+                                                {formatDate(solicitacao.createdAt)}
+                                            </p>
+                                        </div>
+                                        <Badge className={statusColors[solicitacao.status]}>
+                                            {statusLabels[solicitacao.status]}
+                                        </Badge>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
                 {/* Projetos Recentes */}
                 <Card>
                     <CardHeader>
@@ -233,51 +315,7 @@ export default function DashboardPage() {
                                                 {statusLabels[projeto.status]}
                                             </Badge>
                                             <p className="font-semibold text-sm whitespace-nowrap">
-                                                {formatCurrency(projeto.value)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-                {/* Orçamentos Recentes */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <FileText size={20} />
-                            Orçamentos Recentes
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {stats.recentes.orcamentos.length === 0 ? (
-                            <p className="text-sm text-slate-500 text-center py-8">
-                                Nenhum orçamento cadastrado ainda
-                            </p>
-                        ) : (
-                            <div className="space-y-4">
-                                {stats.recentes.orcamentos.map((orcamento) => (
-                                    <div
-                                        key={orcamento.id}
-                                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors"
-                                    >
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium truncate">{orcamento.title}</p>
-                                            <p className="text-sm text-slate-600 truncate">
-                                                {orcamento.cliente.name}
-                                            </p>
-                                            <p className="text-xs text-slate-500 mt-1">
-                                                {formatDate(orcamento.createdAt)}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-3 ml-4">
-                                            <Badge className={statusColors[orcamento.status]}>
-                                                {statusLabels[orcamento.status]}
-                                            </Badge>
-                                            <p className="font-semibold text-sm whitespace-nowrap">
-                                                {formatCurrency(orcamento.value)}
+                                                {formatCurrency(projeto.value ?? 0)}
                                             </p>
                                         </div>
                                     </div>

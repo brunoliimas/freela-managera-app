@@ -23,6 +23,9 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
             faturamentoRecebido,
             projetosRecentes,
             orcamentosRecentes,
+            totalSolicitacoes,
+            solicitacoesNovas,
+            solicitacoesRecentes,
         ] = await Promise.all([
             // Clientes
             prisma.cliente.count({ where: { userId } }),
@@ -98,7 +101,37 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
                     },
                 },
             }),
+            prisma.solicitacao.count({
+                where: {
+                    cliente: { userId },
+                },
+            }),
+
+            prisma.solicitacao.count({
+                where: {
+                    cliente: { userId },
+                    status: 'NOVA',
+                },
+            }),
+
+            prisma.solicitacao.findMany({
+                where: {
+                    cliente: { userId },
+                },
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    cliente: {
+                        select: {
+                            name: true,
+                            company: true,
+                        },
+                    },
+                },
+            }),
         ]);
+
+
 
         // Calcular valores pendentes
         const faturamentoPendente = Number(faturamentoTotal._sum.value || 0) - Number(faturamentoRecebido._sum.value || 0);
@@ -125,6 +158,10 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
                 aprovados: orcamentosAprovados,
                 taxaConversao: `${taxaConversao}%`,
             },
+            solicitacoes: { 
+                total: totalSolicitacoes,
+                novas: solicitacoesNovas,
+            },
             financeiro: {
                 faturamentoTotal: faturamentoTotal._sum.value || 0,
                 recebido: faturamentoRecebido._sum.value || 0,
@@ -135,6 +172,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
             recentes: {
                 projetos: projetosRecentes,
                 orcamentos: orcamentosRecentes,
+                solicitacoes: solicitacoesRecentes,
             },
         });
     } catch (error) {
