@@ -40,8 +40,25 @@ export default function ClienteDetailsPage({ params }: { params: { id: string } 
     };
 
     useEffect(() => {
-        fetchCliente();
-    }, [params.id]);
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const response = await api.get(`/clientes/${params.id}`);
+                setCliente(response.data);
+            } catch (error) {
+                if (axios.isAxiosError(error)) {
+                    toast.error(error.response?.data?.error || 'Erro ao carregar cliente');
+                } else {
+                    toast.error('Erro ao carregar cliente');
+                }
+                router.push('/clientes');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [params.id, router]);
 
     if (loading) {
         return (

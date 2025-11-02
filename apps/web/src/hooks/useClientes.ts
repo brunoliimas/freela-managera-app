@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
 import { Cliente } from '@/types/cliente';
 import { toast } from 'sonner';
@@ -16,7 +16,7 @@ export function useClientes() {
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
-    const fetchClientes = async () => {
+    const fetchClientes = useCallback(async () => {
         try {
             setLoading(true);
             const params: ClienteQueryParams = {};
@@ -39,7 +39,7 @@ export function useClientes() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [search, activeFilter]);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -47,7 +47,7 @@ export function useClientes() {
         }, 300); // Debounce de 300ms
 
         return () => clearTimeout(timeoutId);
-    }, [search, activeFilter]);
+    }, [fetchClientes]);
 
     return {
         clientes,
