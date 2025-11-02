@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Mail, Phone, Building2, Calendar, DollarSign, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,19 +27,24 @@ const statusLabels: Record<string, string> = {
     ARQUIVADA: 'Arquivada',
 };
 
-export default function SolicitacaoDetailsPage({ params }: { params: { id: string } }) {
+export default function SolicitacaoDetailsPage({
+    params
+}: {
+    params: Promise<{ id: string }>
+}) {
     const router = useRouter();
+    const { id } = use(params);
     const [solicitacao, setSolicitacao] = useState<Solicitacao | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchSolicitacao();
-    }, [params.id]);
+    }, [id]);
 
     const fetchSolicitacao = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/solicitacoes/${params.id}`);
+            const response = await api.get(`/solicitacoes/${id}`);
             setSolicitacao(response.data);
         } catch (error) {
             toast.error('Erro ao carregar solicitação');
@@ -51,7 +56,7 @@ export default function SolicitacaoDetailsPage({ params }: { params: { id: strin
 
     const handleMarcarComoAnalisando = async () => {
         try {
-            await api.patch(`/solicitacoes/${params.id}/status`, {
+            await api.patch(`/solicitacoes/${id}/status`, {
                 status: 'ANALISANDO',
             });
             toast.success('Status atualizado!');

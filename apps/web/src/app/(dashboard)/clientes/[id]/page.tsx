@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Mail, Phone, Building2, MapPin, Pencil, FileText, FolderKanban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,13 @@ import api from '@/lib/api';
 import { toast } from 'sonner';
 import axios from 'axios';
 
-export default function ClienteDetailsPage({ params }: { params: { id: string } }) {
+export default function ClienteDetailsPage({
+    params
+}: {
+    params: Promise<{ id: string }>
+}) {
     const router = useRouter();
+    const { id } = use(params);
     const [cliente, setCliente] = useState<Cliente | null>(null);
     const [loading, setLoading] = useState(true);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -25,7 +30,7 @@ export default function ClienteDetailsPage({ params }: { params: { id: string } 
     const fetchCliente = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/clientes/${params.id}`);
+            const response = await api.get(`/clientes/${id}`);
             setCliente(response.data);
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -40,25 +45,8 @@ export default function ClienteDetailsPage({ params }: { params: { id: string } 
     };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const response = await api.get(`/clientes/${params.id}`);
-                setCliente(response.data);
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    toast.error(error.response?.data?.error || 'Erro ao carregar cliente');
-                } else {
-                    toast.error('Erro ao carregar cliente');
-                }
-                router.push('/clientes');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [params.id, router]);
+        fetchCliente();
+    }, [id]);
 
     if (loading) {
         return (
