@@ -14,36 +14,36 @@ datasource db {
 // ============================================
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  avatar    String?
-  
+  id       String  @id @default(cuid())
+  email    String  @unique
+  name     String
+  password String
+  avatar   String?
+
   // Dados do freelancer
-  phone     String?
-  cpf       String?  @unique
-  cnpj      String?  @unique
-  
+  phone String?
+  cpf   String? @unique
+  cnpj  String? @unique
+
   // Configurações
-  company   String?  // Nome da empresa/MEI
-  bio       String?  @db.Text
-  
+  company String? // Nome da empresa/MEI
+  bio     String? @db.Text
+
   // Plano e assinatura
-  plan      Plan     @default(FREE)
+  plan             Plan    @default(FREE)
   stripeCustomerId String? @unique
-  
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relações
   clientes   Cliente[]
   orcamentos Orcamento[]
   projetos   Projeto[]
   pagamentos Pagamento[]
   templates  Template[]
-  
+
   @@map("users")
 }
 
@@ -58,41 +58,42 @@ enum Plan {
 // ============================================
 
 model Cliente {
-  id        String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Dados básicos
-  name      String
-  email     String
-  phone     String?
-  
+  name  String
+  email String
+  phone String?
+
   // Dados da empresa (se for PJ)
-  company   String?
-  cnpj      String?
-  
+  company String?
+  cnpj    String?
+
   // Endereço
-  address   String?
-  city      String?
-  state     String?
-  zipCode   String?
-  
+  address String?
+  city    String?
+  state   String?
+  zipCode String?
+
   // Observações
-  notes     String?  @db.Text
-  
+  notes String? @db.Text
+
   // Status
-  active    Boolean  @default(true)
-  
+  active Boolean @default(true)
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relações
-  userId     String
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orcamentos Orcamento[]
-  projetos   Projeto[]
-  
-  @@map("clientes")
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orcamentos  Orcamento[]
+  projetos    Projeto[]
+  Solicitacao Solicitacao[]
+
   @@index([userId])
+  @@map("clientes")
 }
 
 // ============================================
@@ -100,44 +101,45 @@ model Cliente {
 // ============================================
 
 model Orcamento {
-  id          String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Identificação
-  number      String   // ORC-001, ORC-002...
+  number      String // ORC-001, ORC-002...
   title       String
-  description String   @db.Text
-  
+  description String @db.Text
+
   // Valores
-  value       Decimal  @db.Decimal(10, 2)
-  
+  value Decimal @db.Decimal(10, 2)
+
   // Prazos
   estimatedDays Int?
   validUntil    DateTime?
-  
+
   // Status
-  status      OrcamentoStatus @default(AGUARDANDO)
-  
+  status OrcamentoStatus @default(AGUARDANDO)
+
   // Observações
-  notes       String?  @db.Text
-  
+  notes String? @db.Text
+
   // Arquivos
-  attachments Json?    // Array de URLs
-  
+  attachments Json? // Array de URLs
+
   // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  sentAt      DateTime? // Quando foi enviado
-  approvedAt  DateTime? // Quando foi aprovado
-  
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  sentAt     DateTime? // Quando foi enviado
+  approvedAt DateTime? // Quando foi aprovado
+
   // Relações
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  clienteId   String
-  cliente     Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
   projeto     Projeto? // Quando aprovado vira projeto
-  
+  Solicitacao Solicitacao?
+
   @@map("orcamentos")
   @@index([userId])
   @@index([clienteId])
@@ -145,11 +147,11 @@ model Orcamento {
 }
 
 enum OrcamentoStatus {
-  AGUARDANDO    // Aguardando elaboração do orçamento
-  ENVIADO       // Orçamento enviado ao cliente
-  APROVADO      // Cliente aprovou
-  RECUSADO      // Cliente recusou
-  EXPIRADO      // Passou da validade
+  AGUARDANDO // Aguardando elaboração do orçamento
+  ENVIADO // Orçamento enviado ao cliente
+  APROVADO // Cliente aprovou
+  RECUSADO // Cliente recusou
+  EXPIRADO // Passou da validade
 }
 
 // ============================================
@@ -157,50 +159,50 @@ enum OrcamentoStatus {
 // ============================================
 
 model Projeto {
-  id          String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Identificação
-  number      String   // PRJ-001, PRJ-002...
+  number      String // PRJ-001, PRJ-002...
   title       String
-  description String   @db.Text
-  
+  description String @db.Text
+
   // Valores
-  value       Decimal  @db.Decimal(10, 2)
-  
+  value Decimal @db.Decimal(10, 2)
+
   // Prazos
-  startDate   DateTime @default(now())
-  endDate     DateTime?
-  
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+
   // Status
-  status      ProjetoStatus @default(EM_ANDAMENTO)
-  progress    Int      @default(0) // 0-100%
-  
+  status   ProjetoStatus @default(EM_ANDAMENTO)
+  progress Int           @default(0) // 0-100%
+
   // Observações
-  notes       String?  @db.Text
-  
+  notes String? @db.Text
+
   // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   completedAt DateTime?
-  
+
   // Relações
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  clienteId   String
-  cliente     Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  
-  orcamentoId String?  @unique
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  orcamentoId String?    @unique
   orcamento   Orcamento? @relation(fields: [orcamentoId], references: [id])
-  
-  milestones  Milestone[]
-  pagamentos  Pagamento[]
-  arquivos    Arquivo[]
-  
-  @@map("projetos")
+
+  milestones Milestone[]
+  pagamentos Pagamento[]
+  arquivos   Arquivo[]
+
   @@index([userId])
   @@index([clienteId])
   @@index([status])
+  @@map("projetos")
 }
 
 enum ProjetoStatus {
@@ -215,28 +217,28 @@ enum ProjetoStatus {
 // ============================================
 
 model Milestone {
-  id          String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   title       String
-  description String?  @db.Text
-  
+  description String? @db.Text
+
   // Ordem
-  order       Int
-  
+  order Int
+
   // Status
-  completed   Boolean  @default(false)
+  completed   Boolean   @default(false)
   completedAt DateTime?
-  
+
   // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relações
-  projetoId   String
-  projeto     Projeto  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
-  
-  @@map("milestones")
+  projetoId String
+  projeto   Projeto @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+
   @@index([projetoId])
+  @@map("milestones")
 }
 
 // ============================================
@@ -244,45 +246,45 @@ model Milestone {
 // ============================================
 
 model Pagamento {
-  id          String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Identificação
   description String
-  
+
   // Valores
-  value       Decimal  @db.Decimal(10, 2)
-  
+  value Decimal @db.Decimal(10, 2)
+
   // Datas
-  dueDate     DateTime // Data prevista
-  paidAt      DateTime? // Data que foi pago
-  
+  dueDate DateTime // Data prevista
+  paidAt  DateTime? // Data que foi pago
+
   // Status
-  status      PagamentoStatus @default(PENDENTE)
-  
+  status PagamentoStatus @default(PENDENTE)
+
   // Método de pagamento
-  method      String?  // Pix, Transferência, Boleto, etc
-  
+  method String? // Pix, Transferência, Boleto, etc
+
   // Observações
-  notes       String?  @db.Text
-  
+  notes String? @db.Text
+
   // Comprovante
-  receipt     String?  // URL do comprovante
-  
+  receipt String? // URL do comprovante
+
   // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relações
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  projetoId   String
-  projeto     Projeto  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
-  
-  @@map("pagamentos")
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  projetoId String
+  projeto   Projeto @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([projetoId])
   @@index([status])
+  @@map("pagamentos")
 }
 
 enum PagamentoStatus {
@@ -297,22 +299,22 @@ enum PagamentoStatus {
 // ============================================
 
 model Arquivo {
-  id          String   @id @default(cuid())
-  
-  name        String
-  url         String
-  size        Int      // Tamanho em bytes
-  type        String   // MIME type
-  
+  id String @id @default(cuid())
+
+  name String
+  url  String
+  size Int // Tamanho em bytes
+  type String // MIME type
+
   // Timestamps
-  createdAt   DateTime @default(now())
-  
+  createdAt DateTime @default(now())
+
   // Relações
-  projetoId   String
-  projeto     Projeto  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
-  
-  @@map("arquivos")
+  projetoId String
+  projeto   Projeto @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+
   @@index([projetoId])
+  @@map("arquivos")
 }
 
 // ============================================
@@ -320,30 +322,76 @@ model Arquivo {
 // ============================================
 
 model Template {
-  id          String   @id @default(cuid())
-  
-  name        String
-  type        TemplateType
-  content     String   @db.Text // HTML ou Markdown
-  
+  id String @id @default(cuid())
+
+  name    String
+  type    TemplateType
+  content String       @db.Text // HTML ou Markdown
+
   // Status
-  active      Boolean  @default(true)
-  
+  active Boolean @default(true)
+
   // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relações
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@map("templates")
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([type])
+  @@map("templates")
 }
 
 enum TemplateType {
   PROPOSTA
   CONTRATO
   RECIBO
+}
+
+// ============================================
+// SOLICITAÇÕES (Briefings de Clientes)
+// ============================================
+
+model Solicitacao {
+  id String @id @default(cuid())
+
+  // Dados da solicitação
+  title       String
+  description String    @db.Text
+  budget      Decimal?  @db.Decimal(10, 2) // Orçamento estimado do cliente
+  deadline    DateTime? // Prazo esperado pelo cliente
+
+  // Arquivos/anexos que o cliente enviou
+  attachments Json? // Array de URLs
+
+  // Status
+  status SolicitacaoStatus @default(NOVA)
+
+  // Observações internas (só você vê)
+  notes String? @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relações
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  // Quando você criar o orçamento baseado nessa solicitação
+  orcamentoId String?    @unique
+  orcamento   Orcamento? @relation(fields: [orcamentoId], references: [id])
+
+  @@index([clienteId])
+  @@index([status])
+  @@map("solicitacoes")
+}
+
+enum SolicitacaoStatus {
+  NOVA // Cliente acabou de enviar
+  ANALISANDO // Você está analisando
+  ORCAMENTO_ENVIADO // Você já criou e enviou o orçamento
+  ARQUIVADA // Solicitação arquivada
 }

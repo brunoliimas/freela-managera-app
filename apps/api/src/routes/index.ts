@@ -2,13 +2,14 @@ import { Router } from 'express';
 import authRoutes from './auth.routes';
 import clientesRoutes from './clientes.routes';
 import dashboardRoutes from './dashboard.routes';
-
+import solicitacoesRoutes from './solicitacoes.routes';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/clientes', clientesRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/solicitacoes', solicitacoesRoutes);
 
 // Health check
 router.get('/health', (req, res) => {
