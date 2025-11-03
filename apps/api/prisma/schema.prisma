@@ -90,7 +90,7 @@ model Cliente {
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   orcamentos  Orcamento[]
   projetos    Projeto[]
-  Solicitacao Solicitacao[]
+  solicitacao Solicitacao[]
 
   @@index([userId])
   @@map("clientes")
@@ -103,47 +103,41 @@ model Cliente {
 model Orcamento {
   id String @id @default(cuid())
 
-  // Identificação
-  number      String // ORC-001, ORC-002...
+  number      String
   title       String
   description String @db.Text
 
-  // Valores
   value Decimal @db.Decimal(10, 2)
 
-  // Prazos
   estimatedDays Int?
   validUntil    DateTime?
 
-  // Status
   status OrcamentoStatus @default(AGUARDANDO)
 
-  // Observações
   notes String? @db.Text
 
-  // Arquivos
-  attachments Json? // Array de URLs
+  attachments Json?
 
-  // Timestamps
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
-  sentAt     DateTime? // Quando foi enviado
-  approvedAt DateTime? // Quando foi aprovado
+  sentAt     DateTime?
+  approvedAt DateTime?
 
-  // Relações
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   clienteId String
   cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
 
-  projeto     Projeto? // Quando aprovado vira projeto
-  Solicitacao Solicitacao?
+  orcamentoId String? @unique
 
-  @@map("orcamentos")
+  projeto     Projeto?
+  solicitacao Solicitacao?
+
   @@index([userId])
   @@index([clienteId])
   @@index([status])
+  @@map("orcamentos")
 }
 
 enum OrcamentoStatus {
@@ -367,7 +361,7 @@ model Solicitacao {
   attachments Json? // Array de URLs
 
   // Status
-  status SolicitacaoStatus @default(NOVA)
+  status solicitacaoStatus @default(NOVA)
 
   // Observações internas (só você vê)
   notes String? @db.Text
@@ -389,7 +383,7 @@ model Solicitacao {
   @@map("solicitacoes")
 }
 
-enum SolicitacaoStatus {
+enum solicitacaoStatus {
   NOVA // Cliente acabou de enviar
   ANALISANDO // Você está analisando
   ORCAMENTO_ENVIADO // Você já criou e enviou o orçamento
