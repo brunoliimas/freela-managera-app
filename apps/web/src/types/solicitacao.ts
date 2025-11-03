@@ -14,6 +14,13 @@ export interface Solicitacao {
         email: string;
         company?: string;
     };
+    orcamentoId?: string;
+    orcamento?: {
+        id: string;
+        number: string;
+        title: string;
+        value: number;
+    };
 }
 
 export interface ClientePublico {

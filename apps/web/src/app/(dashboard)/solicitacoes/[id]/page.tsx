@@ -99,8 +99,6 @@ export default function SolicitacaoDetailsPage({
 
     if (!solicitacao) return null;
 
-    const orcamento = (solicitacao as any).orcamento;
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -121,7 +119,7 @@ export default function SolicitacaoDetailsPage({
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    {!orcamento && (
+                    {!solicitacao.orcamento && (
                         <Button onClick={() => setOrcamentoDialogOpen(true)}>
                             <Plus className="mr-2 h-4 w-4" />
                             Criar Orçamento
@@ -130,7 +128,7 @@ export default function SolicitacaoDetailsPage({
                 </div>
             </div>
 
-            {orcamento && (
+            {solicitacao.orcamento && (
                 <Card className="border-green-200 bg-green-50">
                     <CardHeader>
                         <CardTitle className="text-green-900">Orçamento Criado</CardTitle>
@@ -138,14 +136,16 @@ export default function SolicitacaoDetailsPage({
                     <CardContent>
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="font-medium">{orcamento.number} - {orcamento.title}</p>
+                                <p className="font-medium">
+                                    {solicitacao.orcamento.number} - {solicitacao.orcamento.title}
+                                </p>
                                 <p className="text-sm text-green-700 mt-1">
-                                    Valor: {formatCurrency(orcamento.value)}
+                                    Valor: {formatCurrency(solicitacao.orcamento.value)}
                                 </p>
                             </div>
                             <Button
                                 variant="outline"
-                                onClick={() => router.push(`/orcamentos/${orcamento.id}`)}
+                                onClick={() => router.push(`/orcamentos/${solicitacao.orcamento?.id}`)}
                             >
                                 <FileText className="mr-2 h-4 w-4" />
                                 Ver Orçamento
