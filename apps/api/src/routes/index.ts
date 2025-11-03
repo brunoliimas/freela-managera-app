@@ -4,6 +4,7 @@ import clientesRoutes from './clientes.routes';
 import dashboardRoutes from './dashboard.routes';
 import solicitacoesRoutes from './solicitacoes.routes';
 import orcamentosRoutes from './orcamentos.routes';
+import projetosRoutes from './projetos.routes';
 
 
 const router = Router();
@@ -13,6 +14,7 @@ router.use('/clientes', clientesRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/solicitacoes', solicitacoesRoutes);
 router.use('/orcamentos', orcamentosRoutes);
+router.use('/projetos', projetosRoutes);
 
 
 

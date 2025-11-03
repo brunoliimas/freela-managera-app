@@ -131,8 +131,10 @@ model Orcamento {
 
   orcamentoId String? @unique
 
-  projeto     Projeto?
-  solicitacao Solicitacao?
+  projeto Projeto?
+
+  solicitacaoId String?      @unique
+  solicitacao   Solicitacao? @relation(fields: [solicitacaoId], references: [id])
 
   @@index([userId])
   @@index([clienteId])
@@ -375,8 +377,7 @@ model Solicitacao {
   cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
 
   // Quando você criar o orçamento baseado nessa solicitação
-  orcamentoId String?    @unique
-  orcamento   Orcamento? @relation(fields: [orcamentoId], references: [id])
+  orcamento Orcamento?
 
   @@index([clienteId])
   @@index([status])
