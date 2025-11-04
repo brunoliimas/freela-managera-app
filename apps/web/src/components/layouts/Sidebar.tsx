@@ -9,7 +9,8 @@ import {
     FolderKanban,
     DollarSign,
     Settings,
-    LogOut
+    LogOut,
+    CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,6 +38,11 @@ const menuItems = [
         title: 'Projetos',
         href: '/projetos',
         icon: FolderKanban,
+    },
+    {
+        title: 'Pagamentos',
+        href: '/pagamentos',
+        icon: CreditCard,
     },
     {
         title: 'Financeiro',

@@ -155,14 +155,13 @@ export function PagamentoForm({ pagamento, projetoId, onSubmit, isLoading }: Pag
                 <div className="space-y-2">
                     <Label htmlFor="method">Método de Pagamento</Label>
                     <Select
-                        value={watch('method')}
+                        value={watch('method') || undefined}
                         onValueChange={(value) => setValue('method', value)}
                     >
                         <SelectTrigger>
                             <SelectValue placeholder="Selecione o método" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Não definido</SelectItem>
                             <SelectItem value="PIX">PIX</SelectItem>
                             <SelectItem value="Transferência">Transferência Bancária</SelectItem>
                             <SelectItem value="Boleto">Boleto</SelectItem>
