@@ -68,4 +68,13 @@ export interface Pagamento {
     receipt?: string;
     createdAt: string;
     updatedAt: string;
+    projetoId: string;
+    projeto?: {
+        number: string;
+        title: string;
+        cliente: {
+            name: string;
+            company?: string;
+        };
+    };
 }

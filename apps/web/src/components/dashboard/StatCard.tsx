@@ -22,9 +22,9 @@ export function StatCard({
     trend
 }: StatCardProps) {
     return (
-        <Card>
+        <Card className='py-0'>
             <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between">
                     <div className="flex-1">
                         <p className="text-sm font-medium text-slate-600">{title}</p>
                         <p className="text-3xl font-bold text-slate-900 mt-2">{value}</p>
@@ -38,7 +38,7 @@ export function StatCard({
                         )}
                     </div>
                     <div className={`p-3 rounded-full bg-slate-100 ${iconColor}`}>
-                        <Icon className="h-6 w-6" />
+                        <Icon className="h-4 w-4" />
                     </div>
                 </div>
             </CardContent>

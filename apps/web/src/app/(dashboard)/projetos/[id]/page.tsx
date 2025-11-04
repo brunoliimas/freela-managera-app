@@ -30,6 +30,9 @@ import {
 } from '@/components/ui/select';
 import { ProjetoDialog } from '@/components/projetos/ProjetoDialog';
 import { MilestoneItem } from '@/components/projetos/MilestoneItem';
+import { ParcelasDialog } from '@/components/pagamentos/ParcelasDialog';
+import { PagamentoDialog } from '@/components/pagamentos/PagamentoDialog';
+import { MarcarPagoDialog } from '@/components/pagamentos/MarcarPagoDialog';
 import { Projeto } from '@/types/projeto';
 import { formatDate, formatCurrency } from '@/lib/format';
 import api from '@/lib/api';
@@ -41,6 +44,9 @@ const statusColors: Record<string, string> = {
     PAUSADO: 'bg-yellow-500',
     CONCLUIDO: 'bg-green-500',
     CANCELADO: 'bg-red-500',
+    PENDENTE: 'bg-yellow-500',
+    PAGO: 'bg-green-500',
+    ATRASADO: 'bg-red-500',
 };
 
 const statusLabels: Record<string, string> = {
@@ -48,6 +54,9 @@ const statusLabels: Record<string, string> = {
     PAUSADO: 'Pausado',
     CONCLUIDO: 'Concluído',
     CANCELADO: 'Cancelado',
+    PENDENTE: 'Pendente',
+    PAGO: 'Pago',
+    ATRASADO: 'Atrasado',
 };
 
 export default function ProjetoDetailsPage({
@@ -64,6 +73,10 @@ export default function ProjetoDetailsPage({
     const [addingMilestone, setAddingMilestone] = useState(false);
     const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
     const [newMilestoneDescription, setNewMilestoneDescription] = useState('');
+    const [parcelasDialogOpen, setParcelasDialogOpen] = useState(false);
+    const [pagamentoDialogOpen, setPagamentoDialogOpen] = useState(false);
+    const [marcarPagoDialogOpen, setMarcarPagoDialogOpen] = useState(false);
+    const [pagamentoToMarcar, setPagamentoToMarcar] = useState<any>(null);
 
     const fetchProjeto = async () => {
         try {
@@ -349,6 +362,105 @@ export default function ProjetoDetailsPage({
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
+                        <CardTitle>Pagamentos</CardTitle>
+                        <div className="flex gap-2">
+                            <Button onClick={() => setPagamentoDialogOpen(true)} size="sm" variant="outline">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Novo Pagamento
+                            </Button>
+                            <Button onClick={() => setParcelasDialogOpen(true)} size="sm">
+                                <DollarSign className="mr-2 h-4 w-4" />
+                                Gerar Parcelas
+                            </Button>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    {!projeto.pagamentos || projeto.pagamentos.length === 0 ? (
+                        <div className="text-center py-8 text-slate-500">
+                            <DollarSign className="mx-auto h-12 w-12 text-slate-300 mb-3" />
+                            <p>Nenhum pagamento cadastrado.</p>
+                            <p className="text-sm mt-1">
+                                Adicione pagamentos manualmente ou gere parcelas automáticas.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {projeto.pagamentos.map((pagamento) => {
+                                const isPago = pagamento.status === 'PAGO';
+                                const isAtrasado = pagamento.status === 'ATRASADO';
+
+                                return (
+                                    <div
+                                        key={pagamento.id}
+                                        className={`flex items-center justify-between p-4 border rounded-lg ${isPago ? 'bg-green-50 border-green-200' :
+                                                isAtrasado ? 'bg-red-50 border-red-200' :
+                                                    'bg-white'
+                                            }`}
+                                    >
+                                        <div className="flex-1">
+                                            <p className="font-medium">{pagamento.description}</p>
+                                            <div className="flex items-center gap-4 mt-1 text-sm text-slate-600">
+                                                <span>Valor: {formatCurrency(pagamento.value)}</span>
+                                                <span>Vencimento: {formatDate(pagamento.dueDate)}</span>
+                                                {pagamento.paidAt && (
+                                                    <span className="text-green-600">
+                                                        Pago em {formatDate(pagamento.paidAt)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Badge className={statusColors[pagamento.status]}>
+                                                {statusLabels[pagamento.status]}
+                                            </Badge>
+                                            {!isPago && (
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setPagamentoToMarcar(pagamento);
+                                                        setMarcarPagoDialogOpen(true);
+                                                    }}
+                                                >
+                                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                                    Marcar Pago
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            <div className="flex justify-between items-center pt-4 border-t">
+                                <div>
+                                    <p className="text-sm text-slate-600">Total a Receber</p>
+                                    <p className="text-xl font-bold text-yellow-600">
+                                        {formatCurrency(
+                                            projeto.pagamentos
+                                                .filter((p) => p.status !== 'PAGO')
+                                                .reduce((sum, p) => sum + Number(p.value), 0)
+                                        )}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-slate-600">Total Recebido</p>
+                                    <p className="text-xl font-bold text-green-600">
+                                        {formatCurrency(
+                                            projeto.pagamentos
+                                                .filter((p) => p.status === 'PAGO')
+                                                .reduce((sum, p) => sum + Number(p.value), 0)
+                                        )}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
                         <CardTitle>Milestones</CardTitle>
                         <Button onClick={() => setAddingMilestone(true)} size="sm">
                             <Plus className="mr-2 h-4 w-4" />
@@ -414,6 +526,30 @@ export default function ProjetoDetailsPage({
                 projeto={projeto}
                 onSuccess={fetchProjeto}
             />
+
+            <ParcelasDialog
+                open={parcelasDialogOpen}
+                onOpenChange={setParcelasDialogOpen}
+                projetoId={id}
+                valorProjeto={Number(projeto.value)}
+                onSuccess={fetchProjeto}
+            />
+
+            <PagamentoDialog
+                open={pagamentoDialogOpen}
+                onOpenChange={setPagamentoDialogOpen}
+                projetoId={id}
+                onSuccess={fetchProjeto}
+            />
+
+            {pagamentoToMarcar && (
+                <MarcarPagoDialog
+                    open={marcarPagoDialogOpen}
+                    onOpenChange={setMarcarPagoDialogOpen}
+                    pagamento={pagamentoToMarcar}
+                    onSuccess={fetchProjeto}
+                />
+            )}
         </div>
     );
 }

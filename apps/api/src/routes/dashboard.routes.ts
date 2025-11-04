@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { getDashboardStats } from '../controllers/dashboard.controller';
+import { getDashboard } from '../controllers/dashboard.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 
 const router = Router();
 
 router.use(authMiddleware);
 
-router.get('/stats', getDashboardStats);
+router.get('/', getDashboard);
 
 export default router;

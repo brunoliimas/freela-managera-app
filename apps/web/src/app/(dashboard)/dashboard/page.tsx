@@ -93,11 +93,13 @@ export default function DashboardPage() {
             {data.stats.solicitacoes.novas > 0 && (
                 <Alert className="border-orange-200 bg-orange-50">
                     <AlertCircle className="h-4 w-4 text-orange-600" />
-                    <AlertDescription className="text-orange-800">
-                        Você tem <strong>{data.stats.solicitacoes.novas}</strong> {data.stats.solicitacoes.novas === 1 ? 'nova solicitação' : 'novas solicitações'} aguardando análise.{' '}
+                    <AlertDescription className="text-orange-800 flex justify-between items-center">
+                        <div>
+                            Você tem <strong>{data.stats.solicitacoes.novas}</strong> {data.stats.solicitacoes.novas === 1 ? 'nova solicitação' : 'novas solicitações'} aguardando análise.{' '}
+                        </div>
                         <button
                             onClick={() => router.push('/solicitacoes')}
-                            className="underline font-semibold hover:text-orange-900"
+                            className="underline font-semibold cursor-pointer hover:text-orange-900"
                         >
                             Ver solicitações
                         </button>
