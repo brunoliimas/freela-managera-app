@@ -2,79 +2,60 @@ import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
-export const getDashboardStats = async (req: AuthRequest, res: Response) => {
+export const getDashboard = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.userId!;
 
-        // Buscar dados em paralelo para melhor performance
         const [
             totalClientes,
             clientesAtivos,
-            totalProjetos,
-            projetosEmAndamento,
-            projetosConcluidos,
+            totalSolicitacoes,
+            novasSolicitacoes,
             totalOrcamentos,
-            orcamentosAguardando,
             orcamentosEnviados,
             orcamentosAprovados,
-            pagamentosPendentes,
-            pagamentosPagos,
-            faturamentoTotal,
-            faturamentoRecebido,
-            projetosRecentes,
-            orcamentosRecentes,
-            totalSolicitacoes,
-            solicitacoesNovas,
+            totalProjetos,
+            projetosAndamento,
+            projetosConcluidos,
             solicitacoesRecentes,
+            orcamentosRecentes,
+            projetosRecentes,
         ] = await Promise.all([
-            // Clientes
-            prisma.cliente.count({ where: { userId } }),
-            prisma.cliente.count({ where: { userId, active: true } }),
-
-            // Projetos
-            prisma.projeto.count({ where: { userId } }),
-            prisma.projeto.count({
-                where: { userId, status: 'EM_ANDAMENTO' }
-            }),
-            prisma.projeto.count({
-                where: { userId, status: 'CONCLUIDO' }
-            }),
-
-            // Orçamentos
-            prisma.orcamento.count({ where: { userId } }),
-            prisma.orcamento.count({
-                where: { userId, status: 'AGUARDANDO' }
-            }),
-            prisma.orcamento.count({
-                where: { userId, status: 'ENVIADO' }
-            }),
-            prisma.orcamento.count({
-                where: { userId, status: 'APROVADO' }
-            }),
-
-            // Pagamentos
-            prisma.pagamento.count({
-                where: { userId, status: 'PENDENTE' }
-            }),
-            prisma.pagamento.count({
-                where: { userId, status: 'PAGO' }
-            }),
-
-            // Faturamento total (soma de todos os projetos)
-            prisma.projeto.aggregate({
+            prisma.cliente.count({
                 where: { userId },
-                _sum: { value: true },
             }),
-
-            // Faturamento recebido (soma de pagamentos pagos)
-            prisma.pagamento.aggregate({
-                where: { userId, status: 'PAGO' },
-                _sum: { value: true },
+            prisma.cliente.count({
+                where: { userId, active: true },
             }),
-
-            // Projetos recentes
-            prisma.projeto.findMany({
+            prisma.solicitacao.count({
+                where: { cliente: { userId } },
+            }),
+            prisma.solicitacao.count({
+                where: {
+                    cliente: { userId },
+                    status: 'NOVA',
+                },
+            }),
+            prisma.orcamento.count({
                 where: { userId },
+            }),
+            prisma.orcamento.count({
+                where: { userId, status: 'ENVIADO' },
+            }),
+            prisma.orcamento.count({
+                where: { userId, status: 'APROVADO' },
+            }),
+            prisma.projeto.count({
+                where: { userId },
+            }),
+            prisma.projeto.count({
+                where: { userId, status: 'EM_ANDAMENTO' },
+            }),
+            prisma.projeto.count({
+                where: { userId, status: 'CONCLUIDO' },
+            }),
+            prisma.solicitacao.findMany({
+                where: { cliente: { userId } },
                 take: 5,
                 orderBy: { createdAt: 'desc' },
                 include: {
@@ -86,8 +67,6 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
                     },
                 },
             }),
-
-            // Orçamentos recentes
             prisma.orcamento.findMany({
                 where: { userId },
                 take: 5,
@@ -101,23 +80,8 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
                     },
                 },
             }),
-            prisma.solicitacao.count({
-                where: {
-                    cliente: { userId },
-                },
-            }),
-
-            prisma.solicitacao.count({
-                where: {
-                    cliente: { userId },
-                    status: 'NOVA',
-                },
-            }),
-
-            prisma.solicitacao.findMany({
-                where: {
-                    cliente: { userId },
-                },
+            prisma.projeto.findMany({
+                where: { userId },
                 take: 5,
                 orderBy: { createdAt: 'desc' },
                 include: {
@@ -131,54 +95,69 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
             }),
         ]);
 
+        const valoresOrcamentos = await prisma.orcamento.aggregate({
+            where: { userId },
+            _sum: {
+                value: true,
+            },
+        });
 
+        const valoresProjetos = await prisma.projeto.aggregate({
+            where: { userId },
+            _sum: {
+                value: true,
+            },
+        });
 
-        // Calcular valores pendentes
-        const faturamentoPendente = Number(faturamentoTotal._sum.value || 0) - Number(faturamentoRecebido._sum.value || 0);
+        const valorProjetosAndamento = await prisma.projeto.aggregate({
+            where: { userId, status: 'EM_ANDAMENTO' },
+            _sum: {
+                value: true,
+            },
+        });
 
-        // Calcular taxa de conversão de orçamentos
-        const taxaConversao = totalOrcamentos > 0
-            ? ((orcamentosAprovados / totalOrcamentos) * 100).toFixed(1)
-            : '0';
+        const valorProjetosConcluidos = await prisma.projeto.aggregate({
+            where: { userId, status: 'CONCLUIDO' },
+            _sum: {
+                value: true,
+            },
+        });
 
         return res.json({
-            clientes: {
-                total: totalClientes,
-                ativos: clientesAtivos,
-            },
-            projetos: {
-                total: totalProjetos,
-                emAndamento: projetosEmAndamento,
-                concluidos: projetosConcluidos,
-            },
-            orcamentos: {
-                total: totalOrcamentos,
-                aguardando: orcamentosAguardando,
-                enviados: orcamentosEnviados,
-                aprovados: orcamentosAprovados,
-                taxaConversao: `${taxaConversao}%`,
-            },
-            solicitacoes: { 
-                total: totalSolicitacoes,
-                novas: solicitacoesNovas,
-            },
-            financeiro: {
-                faturamentoTotal: faturamentoTotal._sum.value || 0,
-                recebido: faturamentoRecebido._sum.value || 0,
-                pendente: faturamentoPendente,
-                pagamentosPendentes,
-                pagamentosPagos,
+            stats: {
+                clientes: {
+                    total: totalClientes,
+                    ativos: clientesAtivos,
+                },
+                solicitacoes: {
+                    total: totalSolicitacoes,
+                    novas: novasSolicitacoes,
+                },
+                orcamentos: {
+                    total: totalOrcamentos,
+                    enviados: orcamentosEnviados,
+                    aprovados: orcamentosAprovados,
+                    valorTotal: valoresOrcamentos._sum.value || 0,
+                },
+                projetos: {
+                    total: totalProjetos,
+                    emAndamento: projetosAndamento,
+                    concluidos: projetosConcluidos,
+                    valorTotal: valoresProjetos._sum.value || 0,
+                    valorAndamento: valorProjetosAndamento._sum.value || 0,
+                    valorConcluidos: valorProjetosConcluidos._sum.value || 0,
+                },
             },
             recentes: {
-                projetos: projetosRecentes,
-                orcamentos: orcamentosRecentes,
                 solicitacoes: solicitacoesRecentes,
+                orcamentos: orcamentosRecentes,
+                projetos: projetosRecentes,
             },
         });
     } catch (error) {
-        console.error('Get dashboard stats error:', error);
+        console.error('Dashboard error:', error);
         return res.status(500).json({
-            error: 'Erro ao buscar estatísticas',
+            error: 'Erro ao carregar dashboard',
         });
     }
 };
