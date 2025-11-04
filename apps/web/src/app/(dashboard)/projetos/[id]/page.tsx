@@ -33,7 +33,7 @@ import { MilestoneItem } from '@/components/projetos/MilestoneItem';
 import { ParcelasDialog } from '@/components/pagamentos/ParcelasDialog';
 import { PagamentoDialog } from '@/components/pagamentos/PagamentoDialog';
 import { MarcarPagoDialog } from '@/components/pagamentos/MarcarPagoDialog';
-import { Projeto } from '@/types/projeto';
+import { Projeto, Pagamento } from '@/types/projeto';
 import { formatDate, formatCurrency } from '@/lib/format';
 import api from '@/lib/api';
 import { toast } from 'sonner';
@@ -76,7 +76,7 @@ export default function ProjetoDetailsPage({
     const [parcelasDialogOpen, setParcelasDialogOpen] = useState(false);
     const [pagamentoDialogOpen, setPagamentoDialogOpen] = useState(false);
     const [marcarPagoDialogOpen, setMarcarPagoDialogOpen] = useState(false);
-    const [pagamentoToMarcar, setPagamentoToMarcar] = useState<any>(null);
+    const [pagamentoToMarcar, setPagamentoToMarcar] = useState<Pagamento | null>(null);
 
     const fetchProjeto = async () => {
         try {
@@ -394,8 +394,8 @@ export default function ProjetoDetailsPage({
                                     <div
                                         key={pagamento.id}
                                         className={`flex items-center justify-between p-4 border rounded-lg ${isPago ? 'bg-green-50 border-green-200' :
-                                                isAtrasado ? 'bg-red-50 border-red-200' :
-                                                    'bg-white'
+                                            isAtrasado ? 'bg-red-50 border-red-200' :
+                                                'bg-white'
                                             }`}
                                     >
                                         <div className="flex-1">
