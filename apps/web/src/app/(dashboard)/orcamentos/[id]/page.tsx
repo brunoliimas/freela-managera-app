@@ -102,8 +102,23 @@ export default function OrcamentoDetailsPage({
         }
     };
 
-    const handleCreateProject = () => {
-        toast.info('Em breve: Converter em projeto');
+    const handleCreateProject = async () => {
+        if (!orcamento) return;
+
+        try {
+            const response = await api.post('/projetos/from-orcamento', {
+                orcamentoId: orcamento.id,
+            });
+
+            toast.success('Projeto criado com sucesso!');
+            router.push(`/projetos/${response.data.projeto.id}`);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                toast.error(error.response?.data?.error || 'Erro ao criar projeto');
+            } else {
+                toast.error('Erro ao criar projeto');
+            }
+        }
     };
 
     if (loading) {
