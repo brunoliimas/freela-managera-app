@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import routes from './routes';
 import { errorMiddleware } from './middlewares/error.middleware';
+import path from 'path';
+
 
 dotenv.config();
 
@@ -15,7 +17,8 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
-
+// Servir arquivos estáticos (uploads)
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 // Routes
 app.use('/api', routes);
 

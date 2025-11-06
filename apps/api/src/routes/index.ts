@@ -6,6 +6,8 @@ import solicitacoesRoutes from './solicitacoes.routes';
 import orcamentosRoutes from './orcamentos.routes';
 import projetosRoutes from './projetos.routes';
 import pagamentosRoutes from './pagamentos.routes';
+import arquivosRoutes from './arquivos.routes';
+
 
 
 const router = Router();
@@ -17,6 +19,7 @@ router.use('/solicitacoes', solicitacoesRoutes);
 router.use('/orcamentos', orcamentosRoutes);
 router.use('/projetos', projetosRoutes);
 router.use('/pagamentos', pagamentosRoutes);
+router.use('/arquivos', arquivosRoutes);
 
 
 
