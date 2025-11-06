@@ -129,7 +129,8 @@ export function MarcarPagoDialog({
                             {...register('receipt')}
                         />
                         <p className="text-xs text-slate-500">
-                            Cole o link do comprovante (ex: Google Drive, Dropbox)
+                            💡 Você pode fazer upload do comprovante nos <strong>Arquivos do Projeto</strong> e colar o link aqui,
+                            ou usar serviços como Google Drive/Dropbox
                         </p>
                     </div>
 

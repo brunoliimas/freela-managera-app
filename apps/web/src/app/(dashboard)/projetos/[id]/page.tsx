@@ -38,6 +38,9 @@ import { formatDate, formatCurrency } from '@/lib/format';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { FileUpload } from '@/components/arquivos/FileUpload';
+import { FileList } from '@/components/arquivos/FileList';
+import { FileIcon, Upload as UploadIcon } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
     EM_ANDAMENTO: 'bg-blue-500',
@@ -77,6 +80,7 @@ export default function ProjetoDetailsPage({
     const [pagamentoDialogOpen, setPagamentoDialogOpen] = useState(false);
     const [marcarPagoDialogOpen, setMarcarPagoDialogOpen] = useState(false);
     const [pagamentoToMarcar, setPagamentoToMarcar] = useState<Pagamento | null>(null);
+    const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
     const fetchProjeto = async () => {
         try {
@@ -457,7 +461,36 @@ export default function ProjetoDetailsPage({
                     )}
                 </CardContent>
             </Card>
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <CardTitle>Arquivos</CardTitle>
+                        <Button onClick={() => setUploadDialogOpen(!uploadDialogOpen)} size="sm">
+                            <UploadIcon className="mr-2 h-4 w-4" />
+                            {uploadDialogOpen ? 'Cancelar' : 'Enviar Arquivos'}
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    {uploadDialogOpen && (
+                        <div className="mb-6 pb-6 border-b">
+                            <FileUpload
+                                projetoId={id}
+                                onSuccess={() => {
+                                    fetchProjeto();
+                                    setUploadDialogOpen(false);
+                                }}
+                                multiple
+                            />
+                        </div>
+                    )}
 
+                    <FileList
+                        arquivos={projeto.arquivos || []}
+                        onUpdate={fetchProjeto}
+                    />
+                </CardContent>
+            </Card>
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">

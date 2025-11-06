@@ -10,6 +10,7 @@ import {
     DollarSign,
     Settings,
     LogOut,
+    Paperclip,
     CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -45,9 +46,9 @@ const menuItems = [
         icon: CreditCard,
     },
     {
-        title: 'Financeiro',
-        href: '/financeiro',
-        icon: DollarSign,
+        title: 'Arquivos',
+        href: '/arquivos',
+        icon: Paperclip,
     },
 ];
 
