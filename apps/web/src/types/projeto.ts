@@ -78,3 +78,16 @@ export interface Pagamento {
         };
     };
 }
+export interface Arquivo {
+    id: string;
+    name: string;
+    url: string;
+    size: number;
+    type: string;
+    createdAt: string;
+    projetoId: string;
+    projeto?: {
+        number: string;
+        title: string;
+    };
+}
