@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Eye, Pencil, Trash2, MoreVertical } from 'lucide-react';
+import { Plus, Eye, Pencil, Trash2, MoreVertical, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -101,6 +101,28 @@ export default function OrcamentosPage() {
     const handleNew = () => {
         setSelectedOrcamento(undefined);
         setDialogOpen(true);
+    };
+
+    const handleGerarPDF = async (orcamento: Orcamento) => {
+        try {
+            const response = await api.get(`/orcamentos/${orcamento.id}/pdf`, {
+                responseType: 'blob',
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `orcamento-${orcamento.number}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+
+            toast.success('PDF gerado com sucesso!');
+        } catch (error) {
+            toast.error('Erro ao gerar PDF');
+            console.error(error);
+        }
     };
 
     const handleDelete = async () => {
@@ -231,6 +253,10 @@ export default function OrcamentosPage() {
                                                 <DropdownMenuItem onClick={() => handleEdit(orcamento)}>
                                                     <Pencil className="mr-2 h-4 w-4" />
                                                     Editar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleGerarPDF(orcamento)}>
+                                                    <FileDown className="mr-2 h-4 w-4" />
+                                                    Gerar PDF
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     onClick={() => {

@@ -11,7 +11,8 @@ import {
     Clock,
     Pencil,
     FileText,
-    CheckCircle
+    CheckCircle,
+    FileDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,6 +81,29 @@ export default function OrcamentoDetailsPage({
     useEffect(() => {
         fetchOrcamento();
     }, [id]);
+
+    const handleGerarPDF = async () => {
+        try {
+            const response = await api.get(`/orcamentos/${id}/pdf`, {
+                responseType: 'blob',
+            });
+
+            // Criar URL do blob
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `orcamento-${orcamento?.number}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+
+            toast.success('PDF gerado com sucesso!');
+        } catch (error) {
+            toast.error('Erro ao gerar PDF');
+            console.error(error);
+        }
+    };
 
     const handleStatusChange = async (newStatus: string) => {
         if (!orcamento) return;
@@ -151,7 +175,12 @@ export default function OrcamentoDetailsPage({
                         <p className="text-slate-600 mt-1">{orcamento.title}</p>
                     </div>
                 </div>
+
                 <div className="flex gap-2">
+                    <Button onClick={handleGerarPDF} variant="outline">
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Gerar PDF
+                    </Button>
                     <Button onClick={() => setDialogOpen(true)} variant="outline">
                         <Pencil className="mr-2 h-4 w-4" />
                         Editar
