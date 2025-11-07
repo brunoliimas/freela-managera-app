@@ -23,25 +23,41 @@ import api from '@/lib/api';
 import { toast } from 'sonner';
 
 const statusColors: Record<string, string> = {
+    // Solicitações
     NOVA: 'bg-orange-500',
     ANALISANDO: 'bg-blue-500',
     ORCAMENTO_ENVIADO: 'bg-green-500',
+    ARQUIVADA: 'bg-gray-500',
+    // Orçamentos
     AGUARDANDO: 'bg-slate-500',
     ENVIADO: 'bg-blue-500',
     APROVADO: 'bg-green-500',
+    RECUSADO: 'bg-red-500',
+    EXPIRADO: 'bg-orange-500',
+    // Projetos
     EM_ANDAMENTO: 'bg-blue-500',
+    PAUSADO: 'bg-yellow-500',
     CONCLUIDO: 'bg-green-500',
+    CANCELADO: 'bg-red-500',
 };
 
 const statusLabels: Record<string, string> = {
+    // Solicitações
     NOVA: 'Nova',
     ANALISANDO: 'Analisando',
     ORCAMENTO_ENVIADO: 'Orçamento Enviado',
+    ARQUIVADA: 'Arquivada',
+    // Orçamentos
     AGUARDANDO: 'Aguardando',
     ENVIADO: 'Enviado',
     APROVADO: 'Aprovado',
+    RECUSADO: 'Recusado',
+    EXPIRADO: 'Expirado',
+    // Projetos
     EM_ANDAMENTO: 'Em Andamento',
+    PAUSADO: 'Pausado',
     CONCLUIDO: 'Concluído',
+    CANCELADO: 'Cancelado',
 };
 
 export default function DashboardPage() {

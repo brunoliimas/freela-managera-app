@@ -55,7 +55,10 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
                 where: { userId, status: 'CONCLUIDO' },
             }),
             prisma.solicitacao.findMany({
-                where: { cliente: { userId } },
+                where: {
+                    cliente: { userId },
+                    status: { not: 'ARQUIVADA' }
+                },
                 take: 5,
                 orderBy: { createdAt: 'desc' },
                 include: {
