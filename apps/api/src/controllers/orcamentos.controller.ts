@@ -2,6 +2,7 @@ import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { gerarOrcamentoPDF } from '../utils/pdf-generator';
+import { prepareDadosParaPDF } from '../utils/pdf-data';
 
 export const gerarPDFOrcamento = async (req: AuthRequest, res: Response) => {
     try {
@@ -22,33 +23,8 @@ export const gerarPDFOrcamento = async (req: AuthRequest, res: Response) => {
             });
         }
 
-        // Dados da empresa (do usuário logado)
-        const empresaData = {
-            name: orcamento.user.company || orcamento.user.name,
-            email: orcamento.user.email,
-            phone: orcamento.user.phone || undefined,
-            cnpj: orcamento.user.cnpj || undefined,
-            address: undefined, // Você pode adicionar endereço no user se quiser
-        };
-
-        // Dados do orçamento
-        const pdfData = {
-            number: orcamento.number,
-            title: orcamento.title,
-            description: orcamento.description,
-            value: orcamento.value.toNumber(),
-            estimatedDays: orcamento.estimatedDays || undefined,
-            validUntil: orcamento.validUntil || undefined,
-            createdAt: orcamento.createdAt,
-            cliente: {
-                name: orcamento.cliente.name,
-                email: orcamento.cliente.email,
-                phone: orcamento.cliente.phone || undefined,
-                company: orcamento.cliente.company || undefined,
-                cnpj: orcamento.cliente.cnpj || undefined,
-            },
-            empresa: empresaData,
-        };
+        // ✅ Usar função testada - apenas UMA vez!
+        const pdfData = prepareDadosParaPDF(orcamento);
 
         // Configurar headers para download
         res.setHeader('Content-Type', 'application/pdf');
@@ -59,8 +35,16 @@ export const gerarPDFOrcamento = async (req: AuthRequest, res: Response) => {
 
         // Gerar e enviar PDF
         gerarOrcamentoPDF(pdfData, res);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Gerar PDF error:', error);
+
+        // Se for erro de validação, retorna 400
+        if (error.message && error.message.includes('obrigatório')) {
+            return res.status(400).json({
+                error: error.message,
+            });
+        }
+
         return res.status(500).json({
             error: 'Erro ao gerar PDF',
         });
