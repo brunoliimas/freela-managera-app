@@ -7,9 +7,9 @@ import {
     Users,
     FileText,
     FolderKanban,
-    DollarSign,
     Settings,
     LogOut,
+    BarChart3,
     Paperclip,
     CreditCard
 } from 'lucide-react';
@@ -44,6 +44,11 @@ const menuItems = [
         title: 'Pagamentos',
         href: '/pagamentos',
         icon: CreditCard,
+    },
+    {
+        title: 'Relatórios',
+        href: '/relatorios',
+        icon: BarChart3,
     },
     {
         title: 'Arquivos',
