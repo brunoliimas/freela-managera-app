@@ -41,6 +41,7 @@ import axios from 'axios';
 import { FileUpload } from '@/components/arquivos/FileUpload';
 import { FileList } from '@/components/arquivos/FileList';
 import { FileIcon, Upload as UploadIcon } from 'lucide-react';
+import { RichTextDisplay } from '@/components/ui/rich-text-display';
 
 const statusColors: Record<string, string> = {
     EM_ANDAMENTO: 'bg-blue-500',
@@ -210,14 +211,13 @@ export default function ProjetoDetailsPage({
                         <CardTitle>Descrição do Projeto</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-slate-800 whitespace-pre-wrap">{projeto.description}</p>
-
+                        <RichTextDisplay content={projeto.description} />
                         {projeto.notes && (
                             <>
                                 <Separator className="my-4" />
                                 <div>
                                     <p className="text-sm font-semibold text-slate-700 mb-2">Observações</p>
-                                    <p className="text-slate-600 whitespace-pre-wrap">{projeto.notes}</p>
+                                    <RichTextDisplay content={projeto.notes} />
                                 </div>
                             </>
                         )}

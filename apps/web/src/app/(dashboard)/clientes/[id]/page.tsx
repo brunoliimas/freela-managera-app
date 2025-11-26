@@ -15,6 +15,7 @@ import { formatDate, formatCurrency } from '@/lib/format';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { RichTextDisplay } from '@/components/ui/rich-text-display';
 
 export default function ClienteDetailsPage({
     params
@@ -157,7 +158,7 @@ export default function ClienteDetailsPage({
                             <Separator />
                             <div>
                                 <p className="text-sm text-slate-600 mb-2">Observações</p>
-                                <p className="text-slate-800 whitespace-pre-wrap">{cliente.notes}</p>
+                                <RichTextDisplay content={cliente.notes} />
                             </div>
                         </>
                     )}

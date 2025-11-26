@@ -230,7 +230,7 @@ export default function OrcamentoDetailsPage({
                             <>
                                 <Separator />
                                 <div>
-                                    <p className="text-sm text-slate-600 mb-2">Observações Internas</p>
+                                    <p className="text-sm text-slate-600 mb-2">Observações Internasd</p>
                                     <RichTextDisplay content={orcamento.notes} />
                                 </div>
                             </>

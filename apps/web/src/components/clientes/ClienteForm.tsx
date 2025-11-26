@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditorCompact } from '@/components/ui/rich-text-editor-compact';
 import { Switch } from '@/components/ui/switch';
 import { clienteSchema, ClienteInput } from '@/lib/validations/cliente';
 import { Cliente } from '@/types/cliente';
@@ -154,11 +154,10 @@ export function ClienteForm({ cliente, onSubmit, isLoading }: ClienteFormProps) 
 
                 <div className="space-y-2">
                     <Label htmlFor="notes">Anotações sobre o cliente</Label>
-                    <Textarea
-                        id="notes"
+                    <RichTextEditorCompact
+                        value={useWatch({ control, name: 'notes' }) || ''}
+                        onChange={(value) => setValue('notes', value)}
                         placeholder="Informações adicionais, preferências, etc..."
-                        rows={4}
-                        {...register('notes')}
                     />
                 </div>
             </div>

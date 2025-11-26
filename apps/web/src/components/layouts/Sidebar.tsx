@@ -108,6 +108,19 @@ export function Sidebar() {
 
             {/* User Info */}
             <div className="p-4 space-y-2">
+                
+
+                <div className="flex items-center gap-3 px-4 py-3">
+                    <Avatar>
+                        <AvatarFallback className="bg-blue-600">
+                            {user?.name ? getInitials(user.name) : 'U'}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{user?.name}</p>
+                        <p className="text-xs text-slate-400 truncate">{user?.email}</p>
+                    </div>
+                </div>
                 <Link
                     href="/configuracoes"
                     className={cn(
@@ -121,21 +134,9 @@ export function Sidebar() {
                     <span className="font-medium">Configurações</span>
                 </Link>
 
-                <div className="flex items-center gap-3 px-4 py-3">
-                    <Avatar>
-                        <AvatarFallback className="bg-blue-600">
-                            {user?.name ? getInitials(user.name) : 'U'}
-                        </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{user?.name}</p>
-                        <p className="text-xs text-slate-400 truncate">{user?.email}</p>
-                    </div>
-                </div>
-
                 <Button
                     variant="ghost"
-                    className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white"
+                    className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white cursor-pointer"
                     onClick={logout}
                 >
                     <LogOut size={20} className="mr-3" />

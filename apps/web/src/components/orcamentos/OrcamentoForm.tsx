@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
     Select,
     SelectContent,
@@ -20,6 +19,7 @@ import { Cliente } from '@/types/cliente';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { RichTextEditorCompact } from '../ui/rich-text-editor-compact';
 
 interface OrcamentoFormProps {
     orcamento?: Orcamento;
@@ -189,11 +189,12 @@ export function OrcamentoForm({ orcamento, solicitacao, onSubmit, isLoading }: O
 
                 <div className="space-y-2">
                     <Label htmlFor="notes">Notas (visível apenas para você)</Label>
-                    <RichTextEditor
+                    <RichTextEditorCompact
                         value={watch('notes') || ''}
                         onChange={(value) => setValue('notes', value)}
-                        placeholder="Anotações sobre negociação, detalhes técnicos, etc..."
+                        placeholder="Notas..."
                     />
+
                 </div>
             </div>
 

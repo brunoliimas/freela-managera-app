@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditorCompact } from '@/components/ui/rich-text-editor-compact';
 import {
     Select,
     SelectContent,
@@ -176,11 +176,10 @@ export function ProjetoForm({ projeto, onSubmit, isLoading }: ProjetoFormProps) 
 
                 <div className="space-y-2">
                     <Label htmlFor="notes">Notas do Projeto</Label>
-                    <Textarea
-                        id="notes"
+                    <RichTextEditorCompact
+                        value={watch('notes') || ''}
+                        onChange={(value) => setValue('notes', value)}
                         placeholder="Informações adicionais, requisitos especiais..."
-                        rows={3}
-                        {...register('notes')}
                     />
                 </div>
             </div>
