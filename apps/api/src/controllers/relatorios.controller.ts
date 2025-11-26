@@ -88,7 +88,9 @@ export const getRelatorioFinanceiro = async (req: AuthRequest, res: Response) =>
         const [totalSolicitacoes, totalOrcamentos, totalProjetos] = await Promise.all([
             prisma.solicitacao.count({
                 where: {
-                    userId,
+                    cliente:{
+                        userId,
+                    },
                     createdAt: {
                         gte: dataInicio,
                         lte: dataFim,
