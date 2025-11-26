@@ -236,22 +236,12 @@ export function templateOrcamentoCliente(data: {
     
     <div class="info-box">
       <h3>${data.titulo}</h3>
-      <p>${data.descricao}</p>
+      <!-- ✅ Renderiza HTML diretamente -->
+      <div class="prose">
+        ${data.descricao}
+      </div>
       <p><strong>Valor:</strong> ${data.valor}</p>
-      ${data.prazoEstimado ? `<p><strong>Prazo estimado:</strong> ${data.prazoEstimado}</p>` : ''}
-      ${data.validade ? `<p><strong>Válido até:</strong> ${data.validade}</p>` : ''}
     </div>
-
-    <p>Estou à disposição para esclarecer qualquer dúvida.</p>
-
-    <p><strong>Contato:</strong></p>
-    <p>
-      ${data.empresaNome}<br>
-      Email: ${data.empresaEmail}<br>
-      ${data.empresaTelefone ? `Telefone: ${data.empresaTelefone}` : ''}
-    </p>
-
-    <p>Aguardo seu retorno!</p>
   `;
 
     return getEmailLayout(content);

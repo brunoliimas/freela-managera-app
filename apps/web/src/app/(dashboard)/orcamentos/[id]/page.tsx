@@ -32,6 +32,7 @@ import { formatDate, formatCurrency } from '@/lib/format';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { RichTextDisplay } from '@/components/ui/rich-text-display';
 
 const statusColors: Record<string, string> = {
     AGUARDANDO: 'bg-slate-500',
@@ -221,8 +222,8 @@ export default function OrcamentoDetailsPage({
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div>
-                            <p className="text-sm text-slate-600 mb-2">Descrição</p>
-                            <p className="text-slate-800 whitespace-pre-wrap">{orcamento.description}</p>
+                            <h3 className="text-sm font-semibold text-slate-700 mb-2">Descrição</h3>
+                            <RichTextDisplay content={orcamento.description} />
                         </div>
 
                         {orcamento.notes && (
@@ -230,7 +231,7 @@ export default function OrcamentoDetailsPage({
                                 <Separator />
                                 <div>
                                     <p className="text-sm text-slate-600 mb-2">Observações Internas</p>
-                                    <p className="text-slate-800 whitespace-pre-wrap">{orcamento.notes}</p>
+                                    <RichTextDisplay content={orcamento.notes} />
                                 </div>
                             </>
                         )}

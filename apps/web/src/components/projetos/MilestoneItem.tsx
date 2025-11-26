@@ -5,7 +5,7 @@ import { Check, Pencil, Trash2, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Milestone } from '@/types/projeto';
 import { formatDate } from '@/lib/format';
 import api from '@/lib/api';
@@ -90,11 +90,10 @@ export function MilestoneItem({ milestone, projetoId, onUpdate }: MilestoneItemP
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Título do milestone"
                 />
-                <Textarea
+                <RichTextEditor
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(value) => setDescription(value)}
                     placeholder="Descrição (opcional)"
-                    rows={2}
                 />
                 <div className="flex gap-2">
                     <Button onClick={handleSave} size="sm" disabled={isUpdating}>

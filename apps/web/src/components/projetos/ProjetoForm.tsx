@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Textarea } from '@/components/ui/textarea';
 import {
     Select,
@@ -121,11 +122,10 @@ export function ProjetoForm({ projeto, onSubmit, isLoading }: ProjetoFormProps) 
 
                 <div className="space-y-2">
                     <Label htmlFor="description">Descrição *</Label>
-                    <Textarea
-                        id="description"
+                    <RichTextEditor
+                        value={watch('description') || ''}
+                        onChange={(value) => setValue('description', value)}
                         placeholder="Descreva o escopo do projeto..."
-                        rows={6}
-                        {...register('description')}
                     />
                     {errors.description && (
                         <p className="text-sm text-red-500">{errors.description.message}</p>

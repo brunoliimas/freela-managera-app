@@ -20,7 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import {
     Select,
     SelectContent,
@@ -509,11 +509,10 @@ export default function ProjetoDetailsPage({
                                 value={newMilestoneTitle}
                                 onChange={(e) => setNewMilestoneTitle(e.target.value)}
                             />
-                            <Textarea
-                                placeholder="Descrição (opcional)"
+                            <RichTextEditor
                                 value={newMilestoneDescription}
-                                onChange={(e) => setNewMilestoneDescription(e.target.value)}
-                                rows={2}
+                                onChange={(value) => setNewMilestoneDescription(value)}
+                                placeholder="Descrição (opcional)"
                             />
                             <div className="flex gap-2">
                                 <Button onClick={handleAddMilestone} size="sm">

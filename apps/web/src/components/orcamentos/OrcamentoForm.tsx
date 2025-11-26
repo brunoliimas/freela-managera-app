@@ -19,6 +19,7 @@ import { Orcamento } from '@/types/orcamento';
 import { Cliente } from '@/types/cliente';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 interface OrcamentoFormProps {
     orcamento?: Orcamento;
@@ -133,14 +134,13 @@ export function OrcamentoForm({ orcamento, solicitacao, onSubmit, isLoading }: O
 
                 <div className="space-y-2">
                     <Label htmlFor="description">Descrição Detalhada *</Label>
-                    <Textarea
-                        id="description"
-                        placeholder="Descreva o escopo do projeto, entregas, tecnologias..."
-                        rows={6}
-                        {...register('description')}
+                    <RichTextEditor
+                        value={watch('description') || ''}
+                        onChange={(value) => setValue('description', value)}
+                        placeholder="Descreva o projeto em detalhes..."
                     />
                     {errors.description && (
-                        <p className="text-sm text-red-500">{errors.description.message}</p>
+                        <p className="text-sm text-red-600">{errors.description.message}</p>
                     )}
                 </div>
             </div>
@@ -189,11 +189,10 @@ export function OrcamentoForm({ orcamento, solicitacao, onSubmit, isLoading }: O
 
                 <div className="space-y-2">
                     <Label htmlFor="notes">Notas (visível apenas para você)</Label>
-                    <Textarea
-                        id="notes"
+                    <RichTextEditor
+                        value={watch('notes') || ''}
+                        onChange={(value) => setValue('notes', value)}
                         placeholder="Anotações sobre negociação, detalhes técnicos, etc..."
-                        rows={3}
-                        {...register('notes')}
                     />
                 </div>
             </div>
