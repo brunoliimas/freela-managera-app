@@ -3,6 +3,8 @@ import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { gerarOrcamentoPDF } from '../utils/pdf-generator';
 import { prepareDadosParaPDF } from '../utils/pdf-data';
+import { NotificacaoService } from '../services/notificacao.service';
+
 
 export const gerarPDFOrcamento = async (req: AuthRequest, res: Response) => {
     try {
@@ -253,6 +255,12 @@ export const updateOrcamento = async (req: AuthRequest, res: Response) => {
             },
         });
 
+        if (status === 'APROVADO' && orcamentoExists.status !== 'APROVADO') {
+            NotificacaoService.notificarOrcamentoAprovado(id).catch(err => {
+                console.error('Erro ao enviar notificação:', err);
+            });
+        }
+
         return res.json({
             message: 'Orçamento atualizado com sucesso',
             orcamento,
@@ -261,6 +269,41 @@ export const updateOrcamento = async (req: AuthRequest, res: Response) => {
         console.error('Update orcamento error:', error);
         return res.status(500).json({
             error: 'Erro ao atualizar orçamento',
+        });
+    }
+};
+
+export const enviarOrcamentoPorEmail = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.userId!;
+        const { id } = req.params;
+
+        const orcamento = await prisma.orcamento.findFirst({
+            where: { id, userId },
+        });
+
+        if (!orcamento) {
+            return res.status(404).json({
+                error: 'Orçamento não encontrado',
+            });
+        }
+
+        const resultado = await NotificacaoService.enviarOrcamentoParaCliente(id);
+
+        // ✅ Verificar se resultado existe antes de acessar
+        if (resultado && resultado.success) {
+            return res.json({
+                message: 'Orçamento enviado por email com sucesso',
+            });
+        } else {
+            return res.status(500).json({
+                error: 'Erro ao enviar email',
+            });
+        }
+    } catch (error) {
+        console.error('Enviar orçamento por email error:', error);
+        return res.status(500).json({
+            error: 'Erro ao enviar orçamento por email',
         });
     }
 };

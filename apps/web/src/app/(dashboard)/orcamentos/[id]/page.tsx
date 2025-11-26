@@ -126,6 +126,22 @@ export default function OrcamentoDetailsPage({
         }
     };
 
+    const handleEnviarEmail = async () => {
+        if (!orcamento) return;
+
+        try {
+            await api.post(`/orcamentos/${id}/enviar-email`);
+            toast.success('Orçamento enviado por email com sucesso!');
+            fetchOrcamento();
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                toast.error(error.response?.data?.error || 'Erro ao enviar email');
+            } else {
+                toast.error('Erro ao enviar email');
+            }
+        }
+    };
+
     const handleCreateProject = async () => {
         if (!orcamento) return;
 
@@ -177,11 +193,15 @@ export default function OrcamentoDetailsPage({
                 </div>
 
                 <div className="flex gap-2">
-                    <Button onClick={handleGerarPDF} variant="outline">
+                    <Button onClick={handleEnviarEmail} variant="outline" className='cursor-pointer'>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Enviar por Email
+                    </Button>
+                    <Button onClick={handleGerarPDF} variant="outline" className='cursor-pointer'>
                         <FileDown className="mr-2 h-4 w-4" />
                         Gerar PDF
                     </Button>
-                    <Button onClick={() => setDialogOpen(true)} variant="outline">
+                    <Button onClick={() => setDialogOpen(true)} variant="outline" className='cursor-pointer'>
                         <Pencil className="mr-2 h-4 w-4" />
                         Editar
                     </Button>

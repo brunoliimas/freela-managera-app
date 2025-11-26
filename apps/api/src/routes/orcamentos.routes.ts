@@ -6,6 +6,7 @@ import {
     updateOrcamento,
     gerarPDFOrcamento,
     deleteOrcamento,
+    enviarOrcamentoPorEmail
 } from '../controllers/orcamentos.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 
@@ -19,5 +20,6 @@ router.get('/:id', getOrcamento);
 router.post('/', createOrcamento);
 router.put('/:id', updateOrcamento);
 router.delete('/:id', deleteOrcamento);
+router.post('/:id/enviar-email', enviarOrcamentoPorEmail);
 
 export default router;

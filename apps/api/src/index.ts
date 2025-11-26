@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import routes from './routes';
 import { errorMiddleware } from './middlewares/error.middleware';
 import path from 'path';
+import { iniciarCronJobs } from './cron/jobs';
 
 
 dotenv.config();
@@ -24,6 +25,9 @@ app.use('/api', routes);
 
 // Error handling
 app.use(errorMiddleware);
+
+// Iniciar cron jobs
+iniciarCronJobs();
 
 // Iniciar servidor
 app.listen(PORT, () => {

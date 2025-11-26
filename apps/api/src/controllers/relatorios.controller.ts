@@ -17,7 +17,7 @@ export const getRelatorioFinanceiro = async (req: AuthRequest, res: Response) =>
       SELECT 
         EXTRACT(MONTH FROM "paidAt") as mes,
         SUM(value) as total
-      FROM "Pagamento"
+      FROM "pagamentos"
       WHERE "userId" = ${userId}
         AND status = 'PAGO'
         AND "paidAt" >= ${dataInicio}
@@ -88,7 +88,7 @@ export const getRelatorioFinanceiro = async (req: AuthRequest, res: Response) =>
         const [totalSolicitacoes, totalOrcamentos, totalProjetos] = await Promise.all([
             prisma.solicitacao.count({
                 where: {
-                    cliente:{
+                    cliente: {
                         userId,
                     },
                     createdAt: {

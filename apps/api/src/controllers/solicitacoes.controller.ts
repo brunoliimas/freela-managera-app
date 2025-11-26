@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { NotificacaoService } from '../services/notificacao.service';
 
 // Rota PÚBLICA - Cliente cria solicitação
 export const createSolicitacao = async (req: Request, res: Response) => {
@@ -42,6 +43,11 @@ export const createSolicitacao = async (req: Request, res: Response) => {
                     },
                 },
             },
+        });
+
+        NotificacaoService.notificarNovaSolicitacao(solicitacao.id).catch(err => {
+            console.error('Erro ao enviar notificação:', err);
+            // Não bloqueia a resposta se email falhar
         });
 
         return res.status(201).json({

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Eye, Pencil, Trash2, MoreVertical, FileDown } from 'lucide-react';
+import { Plus, Eye, Pencil, Trash2, MoreVertical, FileDown, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -101,6 +101,17 @@ export default function OrcamentosPage() {
     const handleNew = () => {
         setSelectedOrcamento(undefined);
         setDialogOpen(true);
+    };
+
+    const handleEnviarEmail = async (orcamento: Orcamento) => {
+        try {
+            await api.post(`/orcamentos/${orcamento.id}/enviar-email`);
+            toast.success('Orçamento enviado por email!');
+            fetchOrcamentos();
+        } catch (error) {
+            toast.error('Erro ao enviar email');
+            console.error(error);
+        }
     };
 
     const handleGerarPDF = async (orcamento: Orcamento) => {
@@ -257,6 +268,10 @@ export default function OrcamentosPage() {
                                                 <DropdownMenuItem onClick={() => handleGerarPDF(orcamento)}>
                                                     <FileDown className="mr-2 h-4 w-4" />
                                                     Gerar PDF
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleEnviarEmail(orcamento)}>
+                                                    <Mail className="mr-2 h-4 w-4" />
+                                                    Enviar por Email
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     onClick={() => {
