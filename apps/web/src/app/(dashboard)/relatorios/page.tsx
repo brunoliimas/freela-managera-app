@@ -29,6 +29,7 @@ import { TrendingUp, TrendingDown, DollarSign, Clock, Target } from 'lucide-reac
 import { formatCurrency } from '@/lib/format';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import type { RelatorioFinanceiro, ComparacaoAnual } from '@/types/relatorio';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -42,15 +43,15 @@ const STATUS_LABELS: Record<string, string> = {
 export default function RelatoriosPage() {
     const [loading, setLoading] = useState(true);
     const [anoSelecionado, setAnoSelecionado] = useState(new Date().getFullYear().toString());
-    const [relatorio, setRelatorio] = useState<any>(null);
-    const [comparacao, setComparacao] = useState<any>(null);
+    const [relatorio, setRelatorio] = useState<RelatorioFinanceiro | null>(null);
+    const [comparacao, setComparacao] = useState<ComparacaoAnual | null>(null);
 
     const fetchRelatorios = async () => {
         try {
             setLoading(true);
             const [relatorioRes, comparacaoRes] = await Promise.all([
-                api.get(`/relatorios/financeiro?ano=${anoSelecionado}`),
-                api.get('/relatorios/comparacao-anual'),
+                api.get<RelatorioFinanceiro>(`/relatorios/financeiro?ano=${anoSelecionado}`),
+                api.get<ComparacaoAnual>('/relatorios/comparacao-anual'),
             ]);
             setRelatorio(relatorioRes.data);
             setComparacao(comparacaoRes.data);
@@ -264,21 +265,22 @@ export default function RelatoriosPage() {
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie
-                                    data={relatorio.projetosPorStatus.map((item: any) => ({
+                                    data={relatorio.projetosPorStatus.map((item) => ({
                                         name: STATUS_LABELS[item.status] || item.status,
                                         value: item.quantidade,
                                     }))}
                                     cx="50%"
                                     cy="50%"
                                     labelLine={false}
-                                    label={({ name, percent }) =>
-                                        `${name} ${(percent * 100).toFixed(0)}%`
-                                    }
+                                    label={(entry: { name: string; percent?: number }) => {
+                                        const percent = entry.percent || 0;
+                                        return `${entry.name} ${(percent * 100).toFixed(0)}%`;
+                                    }}
                                     outerRadius={80}
                                     fill="#8884d8"
                                     dataKey="value"
                                 >
-                                    {relatorio.projetosPorStatus.map((_: any, index: number) => (
+                                    {relatorio.projetosPorStatus.map((_, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
