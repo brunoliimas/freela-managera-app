@@ -272,6 +272,24 @@ export const updateProjeto = async (req: AuthRequest, res: Response) => {
         if (progress !== undefined) updateData.progress = parseInt(progress);
         if (notes !== undefined) updateData.notes = notes;
 
+        if (status !== undefined) {
+            updateData.status = status;
+
+            if (status === 'CONCLUIDO' && projetoExists.status !== 'CONCLUIDO') {
+                updateData.completedAt = new Date();
+                updateData.progress = 100; 
+            }
+
+            if (status !== 'CONCLUIDO' && projetoExists.status === 'CONCLUIDO') {
+                updateData.completedAt = null;
+            }
+        }
+
+        if (progress !== undefined && status !== 'CONCLUIDO') {
+            updateData.progress = parseInt(progress);
+        }
+
+
         const projeto = await prisma.projeto.update({
             where: { id },
             data: updateData,

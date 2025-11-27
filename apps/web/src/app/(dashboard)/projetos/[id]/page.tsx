@@ -161,6 +161,8 @@ export default function ProjetoDetailsPage({
 
     if (!projeto) return null;
 
+    const progressoEfetivo = projeto.status === 'CONCLUIDO' ? 100 : projeto.progress;
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -194,9 +196,9 @@ export default function ProjetoDetailsPage({
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-medium">Conclusão</span>
-                            <span className="text-sm font-bold">{projeto.progress}%</span>
+                            <span className="text-sm font-bold">{progressoEfetivo}%</span>
                         </div>
-                        <Progress value={projeto.progress} className="h-3" />
+                        <Progress value={progressoEfetivo} className="h-3" />
                         <p className="text-xs text-slate-500">
                             {projeto.milestones?.filter(m => m.completed).length || 0} de{' '}
                             {projeto.milestones?.length || 0} milestones concluídos
