@@ -294,32 +294,35 @@ export default function DashboardPage() {
                             </p>
                         ) : (
                             <div className="space-y-3">
-                                {data.recentes.projetos.map((projeto) => (
-                                    <div
-                                        key={projeto.id}
-                                        className="flex items-start justify-between p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
-                                        onClick={() => router.push(`/projetos/${projeto.id}`)}
-                                    >
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-sm">{projeto.number}</p>
-                                            <p className="text-xs text-slate-500 truncate">
-                                                {projeto.cliente.name}
-                                            </p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <div className="flex-1 bg-slate-200 rounded-full h-1.5">
-                                                    <div
-                                                        className="bg-blue-500 h-1.5 rounded-full transition-all"
-                                                        style={{ width: `${projeto.progress}%` }}
-                                                    />
+                                {data.recentes.projetos.map((projeto) => {
+                                    const progressoEfetivo = projeto.status === 'CONCLUIDO' ? 100 : projeto.progress;
+                                    return (
+                                        <div
+                                            key={projeto.id}
+                                            className="flex items-start justify-between p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+                                            onClick={() => router.push(`/projetos/${projeto.id}`)}
+                                        >
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium text-sm">{projeto.number}</p>
+                                                <p className="text-xs text-slate-500 truncate">
+                                                    {projeto.cliente.name}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <div className="flex-1 bg-slate-200 rounded-full h-1.5">
+                                                        <div
+                                                            className="bg-green-500 h-1.5 rounded-full transition-all"
+                                                            style={{ width: `${progressoEfetivo}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-xs text-slate-500">{progressoEfetivo}%</span>
                                                 </div>
-                                                <span className="text-xs text-slate-500">{projeto.progress}%</span>
                                             </div>
+                                            <Badge className={`${statusColors[projeto.status]} ml-2 shrink-0`}>
+                                                {statusLabels[projeto.status]}
+                                            </Badge>
                                         </div>
-                                        <Badge className={`${statusColors[projeto.status]} ml-2 shrink-0`}>
-                                            {statusLabels[projeto.status]}
-                                        </Badge>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </CardContent>

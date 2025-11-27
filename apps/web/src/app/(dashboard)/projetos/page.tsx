@@ -192,64 +192,67 @@ export default function ProjetosPage() {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            projetos.map((projeto) => (
-                                <TableRow key={projeto.id}>
-                                    <TableCell className="font-medium">{projeto.number}</TableCell>
-                                    <TableCell>{projeto.title}</TableCell>
-                                    <TableCell>
-                                        <div>
-                                            <p className="font-medium">{projeto.cliente?.name}</p>
-                                            <p className="text-xs text-slate-500">{projeto.cliente?.company}</p>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="font-semibold">
-                                        {formatCurrency(projeto.value)}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="space-y-1">
-                                            <Progress value={projeto.progress} className="h-2" />
-                                            <p className="text-xs text-slate-500">{projeto.progress}%</p>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge className={statusColors[projeto.status]}>
-                                            {statusLabels[projeto.status]}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        {projeto.endDate ? formatDate(projeto.endDate) : '-'}
-                                    </TableCell>
-                                    <TableCell>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => handleView(projeto.id)}>
-                                                    <Eye className="mr-2 h-4 w-4" />
-                                                    Visualizar
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleEdit(projeto)}>
-                                                    <Pencil className="mr-2 h-4 w-4" />
-                                                    Editar
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    onClick={() => {
-                                                        setProjetoToDelete(projeto);
-                                                        setDeleteDialogOpen(true);
-                                                    }}
-                                                    className="text-red-600"
-                                                >
-                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                    Excluir
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            ))
+                            projetos.map((projeto) => {
+                                const progressoEfetivo = projeto.status === 'CONCLUIDO' ? 100 : projeto.progress;
+                                return (
+                                    <TableRow key={projeto.id}>
+                                        <TableCell className="font-medium">{projeto.number}</TableCell>
+                                        <TableCell>{projeto.title}</TableCell>
+                                        <TableCell>
+                                            <div>
+                                                <p className="font-medium">{projeto.cliente?.name}</p>
+                                                <p className="text-xs text-slate-500">{projeto.cliente?.company}</p>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="font-semibold">
+                                            {formatCurrency(projeto.value)}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="space-y-1">
+                                                <Progress value={progressoEfetivo} className="h-2" />
+                                                <p className="text-xs text-slate-500">{progressoEfetivo}%</p>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge className={statusColors[projeto.status]}>
+                                                {statusLabels[projeto.status]}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            {projeto.endDate ? formatDate(projeto.endDate) : '-'}
+                                        </TableCell>
+                                        <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => handleView(projeto.id)}>
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        Visualizar
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleEdit(projeto)}>
+                                                        <Pencil className="mr-2 h-4 w-4" />
+                                                        Editar
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => {
+                                                            setProjetoToDelete(projeto);
+                                                            setDeleteDialogOpen(true);
+                                                        }}
+                                                        className="text-red-600"
+                                                    >
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        Excluir
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })
                         )}
                     </TableBody>
                 </Table>

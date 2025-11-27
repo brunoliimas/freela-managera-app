@@ -230,7 +230,7 @@ export default function OrcamentosPage() {
                             orcamentos.map((orcamento) => (
                                 <TableRow key={orcamento.id}>
                                     <TableCell className="font-medium">{orcamento.number}</TableCell>
-                                    <TableCell>{orcamento.title}</TableCell>
+                                    <TableCell className="max-w-[150px] truncate">{orcamento.title}</TableCell>
                                     <TableCell>
                                         <div>
                                             <p className="font-medium">{orcamento.cliente?.name}</p>
