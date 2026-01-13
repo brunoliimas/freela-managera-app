@@ -2,6 +2,7 @@
   "name": "freela-managera-app",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "npm@11.6.4",
   "description": "",
   "workspaces": [
     "apps/*",
@@ -16,6 +17,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "turbo": "^2.6.0"
+    "turbo": "^2.7.4"
   }
 }
