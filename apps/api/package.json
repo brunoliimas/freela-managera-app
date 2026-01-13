@@ -14,7 +14,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@prisma/client": "^5.20.0",
+    "@prisma/client": "^7.2.0",
     "@types/bcrypt": "^6.0.0",
     "@types/multer": "^2.0.0",
     "@types/node-cron": "^3.0.11",
@@ -41,7 +41,7 @@
     "@types/supertest": "^6.0.3",
     "jest": "^30.2.0",
     "nodemon": "^3.0.2",
-    "prisma": "^5.20.0",
+    "prisma": "^7.2.0",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.5",
     "tsx": "^4.7.0",
