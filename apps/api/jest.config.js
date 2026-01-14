@@ -7,4 +7,15 @@ module.exports = {
   collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts", "!src/index.ts"],
   coverageDirectory: "coverage",
   verbose: true,
+  transform: {
+    "^.+\\.tsx?$": ["ts-jest", {
+      tsconfig: {
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+      }
+    }]
+  },
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
 };

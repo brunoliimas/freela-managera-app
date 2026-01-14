@@ -11,6 +11,13 @@
     },
     "lint": {
       "outputs": []
+    },
+    "test": {
+      "outputs": ["coverage/**"],
+      "cache": false
+    },
+    "test:coverage": {
+      "outputs": ["coverage/**"]
     }
   }
 }
