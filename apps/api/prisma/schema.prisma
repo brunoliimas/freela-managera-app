@@ -28,6 +28,10 @@ model User {
   company String? // Nome da empresa/MEI
   bio     String? @db.Text
 
+  // Recuperação de senha
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+
   // Plano e assinatura
   plan             Plan    @default(FREE)
   stripeCustomerId String? @unique

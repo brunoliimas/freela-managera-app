@@ -5,6 +5,7 @@ const mockBcryptHash = jest.fn();
 const mockBcryptCompare = jest.fn();
 const mockGenerateToken = jest.fn();
 const mockPrismaUserFindUnique = jest.fn();
+const mockPrismaUserFindFirst = jest.fn();
 const mockPrismaUserCreate = jest.fn();
 const mockPrismaUserUpdate = jest.fn();
 
@@ -14,6 +15,7 @@ jest.mock('../../config/database', () => ({
     default: {
         user: {
             findUnique: mockPrismaUserFindUnique,
+            findFirst: mockPrismaUserFindFirst,
             create: mockPrismaUserCreate,
             update: mockPrismaUserUpdate,
         },
@@ -31,8 +33,28 @@ jest.mock('../../utils/jwt', () => ({
     generateToken: (...args: any[]) => mockGenerateToken(...args),
 }));
 
+// Mock do cookie utils
+const mockSetTokenCookie = jest.fn();
+const mockClearTokenCookie = jest.fn();
+jest.mock('../../utils/cookie', () => ({
+    setTokenCookie: (...args: any[]) => mockSetTokenCookie(...args),
+    clearTokenCookie: (...args: any[]) => mockClearTokenCookie(...args),
+}));
+
+// Mock do email
+const mockSendEmail = jest.fn();
+jest.mock('../../config/email', () => ({
+    sendEmail: (...args: any[]) => mockSendEmail(...args),
+}));
+
+// Mock dos templates de email
+const mockTemplateRecuperacaoSenha = jest.fn().mockReturnValue('<html>reset</html>');
+jest.mock('../../templates/email-templates', () => ({
+    templateRecuperacaoSenha: (...args: any[]) => mockTemplateRecuperacaoSenha(...args),
+}));
+
 // Importar depois dos mocks
-import { register, login, getProfile, updateProfile } from '../../controllers/auth.controller';
+import { register, login, logout, forgotPassword, resetPassword, getProfile, updateProfile } from '../../controllers/auth.controller';
 
 describe('Auth Controller', () => {
     let mockRequest: Partial<Request>;
@@ -56,6 +78,11 @@ describe('Auth Controller', () => {
         mockPrismaUserFindUnique.mockClear();
         mockPrismaUserCreate.mockClear();
         mockPrismaUserUpdate.mockClear();
+        mockSetTokenCookie.mockClear();
+        mockClearTokenCookie.mockClear();
+        mockSendEmail.mockClear();
+        mockTemplateRecuperacaoSenha.mockClear();
+        mockPrismaUserFindFirst.mockClear();
     });
 
     describe('register', () => {
@@ -124,10 +151,10 @@ describe('Auth Controller', () => {
                 }),
             });
 
+            expect(mockSetTokenCookie).toHaveBeenCalledWith(mockResponse, 'fake-jwt-token');
             expect(mockResponse.status).toHaveBeenCalledWith(201);
             expect(mockResponse.json).toHaveBeenCalledWith({
                 message: 'Usuário criado com sucesso',
-                token: 'fake-jwt-token',
                 user: expect.objectContaining({
                     id: '1',
                     email: 'test@test.com',
@@ -193,9 +220,9 @@ describe('Auth Controller', () => {
             await login(mockRequest as Request, mockResponse as Response);
 
             expect(mockBcryptCompare).toHaveBeenCalledWith('senha123', 'hashedPassword');
+            expect(mockSetTokenCookie).toHaveBeenCalledWith(mockResponse, 'fake-jwt-token');
             expect(mockResponse.json).toHaveBeenCalledWith({
                 message: 'Login realizado com sucesso',
-                token: 'fake-jwt-token',
                 user: expect.objectContaining({
                     id: '1',
                     email: 'test@test.com',
@@ -348,6 +375,17 @@ describe('Auth Controller', () => {
             expect(mockResponse.status).toHaveBeenCalledWith(400);
             expect(mockResponse.json).toHaveBeenCalledWith({
                 error: 'Nome, email e senha são obrigatórios',
+            });
+        });
+    });
+
+    describe('logout', () => {
+        it('deve limpar o cookie e retornar sucesso', () => {
+            logout(mockRequest as Request, mockResponse as Response);
+
+            expect(mockClearTokenCookie).toHaveBeenCalledWith(mockResponse);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                message: 'Logout realizado com sucesso',
             });
         });
     });
@@ -535,6 +573,181 @@ describe('Auth Controller', () => {
             expect(mockResponse.status).toHaveBeenCalledWith(500);
             expect(mockResponse.json).toHaveBeenCalledWith({
                 error: 'Erro ao atualizar perfil',
+            });
+        });
+    });
+
+    describe('forgotPassword', () => {
+        it('deve enviar email de recuperação para email cadastrado', async () => {
+            mockRequest.body = { email: 'test@test.com' };
+
+            const mockUser = {
+                id: 'user-123',
+                email: 'test@test.com',
+                name: 'Test User',
+            };
+
+            mockPrismaUserFindUnique.mockResolvedValue(mockUser);
+            mockPrismaUserUpdate.mockResolvedValue(mockUser);
+            mockSendEmail.mockResolvedValue({ success: true });
+
+            await forgotPassword(mockRequest as Request, mockResponse as Response);
+
+            expect(mockPrismaUserFindUnique).toHaveBeenCalledWith({
+                where: { email: 'test@test.com' },
+            });
+            expect(mockPrismaUserUpdate).toHaveBeenCalledWith({
+                where: { id: 'user-123' },
+                data: expect.objectContaining({
+                    resetPasswordToken: expect.any(String),
+                    resetPasswordExpires: expect.any(Date),
+                }),
+            });
+            expect(mockTemplateRecuperacaoSenha).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    nome: 'Test User',
+                    resetUrl: expect.stringContaining('/reset-password?token='),
+                }),
+            );
+            expect(mockSendEmail).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    to: 'test@test.com',
+                    subject: 'Recuperação de Senha - FreelanceManager',
+                }),
+            );
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                message: 'Se o email estiver cadastrado, você receberá um link para redefinir sua senha.',
+            });
+        });
+
+        it('deve retornar 200 mesmo se email não existe (segurança)', async () => {
+            mockRequest.body = { email: 'naoexiste@test.com' };
+            mockPrismaUserFindUnique.mockResolvedValue(null);
+
+            await forgotPassword(mockRequest as Request, mockResponse as Response);
+
+            expect(mockSendEmail).not.toHaveBeenCalled();
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                message: 'Se o email estiver cadastrado, você receberá um link para redefinir sua senha.',
+            });
+        });
+
+        it('deve retornar erro 400 se email não fornecido', async () => {
+            mockRequest.body = {};
+
+            await forgotPassword(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                error: 'Email é obrigatório',
+            });
+        });
+
+        it('deve lidar com erro 500', async () => {
+            mockRequest.body = { email: 'test@test.com' };
+            mockPrismaUserFindUnique.mockRejectedValue(new Error('Database error'));
+
+            await forgotPassword(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(500);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                error: 'Erro ao processar solicitação de recuperação de senha',
+            });
+        });
+    });
+
+    describe('resetPassword', () => {
+        it('deve redefinir senha com token válido', async () => {
+            mockRequest.body = {
+                token: 'valid-reset-token',
+                password: 'novaSenha123',
+            };
+
+            const mockUser = {
+                id: 'user-123',
+                email: 'test@test.com',
+            };
+
+            mockPrismaUserFindFirst.mockResolvedValue(mockUser);
+            mockBcryptHash.mockResolvedValue('newHashedPassword');
+            mockPrismaUserUpdate.mockResolvedValue(mockUser);
+
+            await resetPassword(mockRequest as Request, mockResponse as Response);
+
+            expect(mockPrismaUserFindFirst).toHaveBeenCalledWith({
+                where: {
+                    resetPasswordToken: expect.any(String),
+                    resetPasswordExpires: { gt: expect.any(Date) },
+                },
+            });
+            expect(mockBcryptHash).toHaveBeenCalledWith('novaSenha123', 10);
+            expect(mockPrismaUserUpdate).toHaveBeenCalledWith({
+                where: { id: 'user-123' },
+                data: {
+                    password: 'newHashedPassword',
+                    resetPasswordToken: null,
+                    resetPasswordExpires: null,
+                },
+            });
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                message: 'Senha redefinida com sucesso. Faça login com sua nova senha.',
+            });
+        });
+
+        it('deve retornar erro 400 para token inválido ou expirado', async () => {
+            mockRequest.body = {
+                token: 'invalid-token',
+                password: 'novaSenha123',
+            };
+
+            mockPrismaUserFindFirst.mockResolvedValue(null);
+
+            await resetPassword(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                error: 'Token inválido ou expirado. Solicite uma nova recuperação de senha.',
+            });
+        });
+
+        it('deve retornar erro 400 se token ou senha não fornecidos', async () => {
+            mockRequest.body = { token: 'some-token' };
+
+            await resetPassword(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                error: 'Token e nova senha são obrigatórios',
+            });
+        });
+
+        it('deve retornar erro 400 se senha for curta demais', async () => {
+            mockRequest.body = {
+                token: 'some-token',
+                password: '123',
+            };
+
+            await resetPassword(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                error: 'A senha deve ter no mínimo 6 caracteres',
+            });
+        });
+
+        it('deve lidar com erro 500', async () => {
+            mockRequest.body = {
+                token: 'valid-token',
+                password: 'novaSenha123',
+            };
+
+            mockPrismaUserFindFirst.mockRejectedValue(new Error('Database error'));
+
+            await resetPassword(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(500);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                error: 'Erro ao redefinir senha',
             });
         });
     });

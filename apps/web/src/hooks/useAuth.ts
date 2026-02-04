@@ -17,12 +17,11 @@ interface User {
 
 interface AuthState {
     user: User | null;
-    token: string | null;
     isLoading: boolean;
     isHydrated: boolean;
     login: (data: LoginInput) => Promise<void>;
     register: (data: RegisterInput) => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     setUser: (user: User) => void;
     setHydrated: () => void;
 }
@@ -31,7 +30,6 @@ export const useAuth = create<AuthState>()(
     persist(
         (set) => ({
             user: null,
-            token: null,
             isLoading: false,
             isHydrated: false,
 
@@ -41,10 +39,9 @@ export const useAuth = create<AuthState>()(
                 set({ isLoading: true });
                 try {
                     const response = await api.post('/auth/login', data);
-                    const { user, token } = response.data;
-
-                    localStorage.setItem('token', token);
-                    set({ user, token, isLoading: false });
+                    const { user } = response.data;
+                    // Token é gerenciado via httpOnly cookie pelo servidor
+                    set({ user, isLoading: false });
                 } catch (error) {
                     set({ isLoading: false });
                     if (axios.isAxiosError(error)) {
@@ -58,10 +55,9 @@ export const useAuth = create<AuthState>()(
                 set({ isLoading: true });
                 try {
                     const response = await api.post('/auth/register', data);
-                    const { user, token } = response.data;
-
-                    localStorage.setItem('token', token);
-                    set({ user, token, isLoading: false });
+                    const { user } = response.data;
+                    // Token é gerenciado via httpOnly cookie pelo servidor
+                    set({ user, isLoading: false });
                 } catch (error) {
                     set({ isLoading: false });
                     if (axios.isAxiosError(error)) {
@@ -71,9 +67,13 @@ export const useAuth = create<AuthState>()(
                 }
             },
 
-            logout: () => {
-                localStorage.removeItem('token');
-                set({ user: null, token: null });
+            logout: async () => {
+                try {
+                    await api.post('/auth/logout');
+                } catch {
+                    // Limpar estado local mesmo se a chamada falhar
+                }
+                set({ user: null });
             },
 
             setUser: (user: User) => set({ user }),
@@ -81,6 +81,8 @@ export const useAuth = create<AuthState>()(
         {
             name: 'auth-storage',
             storage: createJSONStorage(() => localStorage),
+            // Persistir apenas dados do user (token não fica mais no client)
+            partialize: (state) => ({ user: state.user }),
             onRehydrateStorage: () => (state) => {
                 state?.setHydrated();
             },

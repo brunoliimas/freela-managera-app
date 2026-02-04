@@ -1,23 +1,36 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import routes from './routes';
 import { errorMiddleware } from './middlewares/error.middleware';
+import { apiRateLimit } from './middlewares/rate-limit.middleware';
 import path from 'path';
 import { iniciarCronJobs } from './cron/jobs';
-
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim());
+
 // Middlewares
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true
+    origin: (origin, callback) => {
+        // Permitir requests sem origin (ex: mobile apps, curl, Postman)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error(`Origin ${origin} não permitida pelo CORS`));
+    },
+    credentials: true,
 }));
+app.use(cookieParser());
 app.use(express.json());
+// Rate limiting geral
+app.use('/api', apiRateLimit);
 // Servir arquivos estáticos (uploads)
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 // Routes

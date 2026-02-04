@@ -12,16 +12,22 @@ export const authMiddleware = (
     next: NextFunction
 ) => {
     try {
-        const authHeader = req.headers.authorization;
+        // 1. Tentar ler token do cookie httpOnly (preferencial)
+        let token = req.cookies?.token;
 
-        if (!authHeader) {
-            return res.status(401).json({ error: 'Token não fornecido' });
+        // 2. Fallback para Authorization header (compatibilidade com mobile/API clients)
+        if (!token) {
+            const authHeader = req.headers.authorization;
+            if (authHeader) {
+                const [scheme, headerToken] = authHeader.split(' ');
+                if (scheme === 'Bearer' && headerToken) {
+                    token = headerToken;
+                }
+            }
         }
 
-        const [, token] = authHeader.split(' ');
-
         if (!token) {
-            return res.status(401).json({ error: 'Token mal formatado' });
+            return res.status(401).json({ error: 'Token não fornecido' });
         }
 
         const decoded = verifyToken(token);

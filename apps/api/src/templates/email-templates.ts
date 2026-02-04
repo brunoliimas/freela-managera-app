@@ -218,6 +218,34 @@ export function templateOrcamentoAprovado(data: {
     return getEmailLayout(content);
 }
 
+// Template: Recuperação de senha
+export function templateRecuperacaoSenha(data: {
+    nome: string;
+    resetUrl: string;
+}): string {
+    const content = `
+    <h2>Recuperação de Senha</h2>
+    <p>Olá, <strong>${data.nome}</strong>!</p>
+    <p>Recebemos uma solicitação para redefinir a senha da sua conta.</p>
+
+    <div class="info-box">
+      <p>Clique no botão abaixo para criar uma nova senha. Este link é válido por <strong>1 hora</strong>.</p>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="${data.resetUrl}" class="button">
+        Redefinir Senha
+      </a>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+      Se você não solicitou a redefinição de senha, ignore este email. Sua senha permanecerá a mesma.
+    </p>
+  `;
+
+    return getEmailLayout(content);
+}
+
 // Template: Email para cliente (orçamento)
 export function templateOrcamentoCliente(data: {
     orcamentoNumero: string;

@@ -7,14 +7,14 @@ import { DashboardLayout } from '@/components/layouts/DashboardLayout';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
-    const { user, token, isHydrated } = useAuth();
+    const { user, isHydrated } = useAuth();
 
     useEffect(() => {
         // Só redireciona após a hidratação estar completa
-        if (isHydrated && (!token || !user)) {
+        if (isHydrated && !user) {
             router.push('/login');
         }
-    }, [token, user, router, isHydrated]);
+    }, [user, router, isHydrated]);
 
     // Aguardar hidratação
     if (!isHydrated) {
@@ -25,8 +25,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         );
     }
 
-    // Se não tiver token após hidratação, não renderiza nada (vai redirecionar)
-    if (!token || !user) {
+    // Se não tiver user após hidratação, não renderiza nada (vai redirecionar)
+    if (!user) {
         return null;
     }
 
