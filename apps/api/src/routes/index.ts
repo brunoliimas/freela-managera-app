@@ -22,13 +22,4 @@ router.use('/pagamentos', pagamentosRoutes);
 router.use('/arquivos', arquivosRoutes);
 router.use('/relatorios', relatoriosRoutes);
 
-// Health check
-router.get('/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        message: 'API is running!',
-        timestamp: new Date().toISOString()
-    });
-});
-
 export default router;

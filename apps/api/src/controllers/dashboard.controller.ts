@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import logger from '../config/logger';
 
 export const getDashboard = async (req: AuthRequest, res: Response) => {
     try {
@@ -158,7 +159,7 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
             },
         });
     } catch (error) {
-        console.error('Dashboard error:', error);
+        logger.error({ err: error }, 'Dashboard error');
         return res.status(500).json({
             error: 'Erro ao carregar dashboard',
         });

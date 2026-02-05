@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import { env } from './config/env';
+import logger from './config/logger';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -7,11 +9,11 @@ import { errorMiddleware } from './middlewares/error.middleware';
 import { apiRateLimit } from './middlewares/rate-limit.middleware';
 import path from 'path';
 import { iniciarCronJobs } from './cron/jobs';
+import { setupSwagger } from './docs/setupSwagger';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000')
+const allowedOrigins = (env.ALLOWED_ORIGINS || env.FRONTEND_URL)
     .split(',')
     .map((origin) => origin.trim());
 
@@ -29,12 +31,22 @@ app.use(cors({
 }));
 app.use(cookieParser());
 app.use(express.json());
+// Swagger docs (fora do versionamento)
+setupSwagger(app);
+// Health check (fora do versionamento)
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        message: 'API is running!',
+        timestamp: new Date().toISOString(),
+    });
+});
 // Rate limiting geral
-app.use('/api', apiRateLimit);
+app.use('/api/v1', apiRateLimit);
 // Servir arquivos estáticos (uploads)
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 // Routes
-app.use('/api', routes);
+app.use('/api/v1', routes);
 
 // Error handling
 app.use(errorMiddleware);
@@ -43,7 +55,6 @@ app.use(errorMiddleware);
 iniciarCronJobs();
 
 // Iniciar servidor
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📚 API docs: http://localhost:${PORT}/api/health`);
+app.listen(env.PORT, () => {
+    logger.info(`Server running on http://localhost:${env.PORT}`);
 });

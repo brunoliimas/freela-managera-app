@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import logger from '../config/logger';
 
 export const getMilestones = async (req: AuthRequest, res: Response) => {
     try {
@@ -27,7 +28,7 @@ export const getMilestones = async (req: AuthRequest, res: Response) => {
 
         return res.json(milestones);
     } catch (error) {
-        console.error('Get milestones error:', error);
+        logger.error({ err: error }, 'Get milestones error');
         return res.status(500).json({
             error: 'Erro ao buscar milestones',
         });
@@ -80,7 +81,7 @@ export const createMilestone = async (req: AuthRequest, res: Response) => {
             milestone,
         });
     } catch (error) {
-        console.error('Create milestone error:', error);
+        logger.error({ err: error }, 'Create milestone error');
         return res.status(500).json({
             error: 'Erro ao criar milestone',
         });
@@ -122,21 +123,25 @@ export const updateMilestone = async (req: AuthRequest, res: Response) => {
             }
         }
 
-        const updated = await prisma.milestone.update({
-            where: { id },
-            data: updateData,
-        });
+        const { updated } = await prisma.$transaction(async (tx) => {
+            const updated = await tx.milestone.update({
+                where: { id },
+                data: updateData,
+            });
 
-        const allMilestones = await prisma.milestone.findMany({
-            where: { projetoId },
-        });
+            const allMilestones = await tx.milestone.findMany({
+                where: { projetoId },
+            });
 
-        const completedCount = allMilestones.filter(m => m.completed).length;
-        const progress = Math.round((completedCount / allMilestones.length) * 100);
+            const completedCount = allMilestones.filter(m => m.completed).length;
+            const progress = Math.round((completedCount / allMilestones.length) * 100);
 
-        await prisma.projeto.update({
-            where: { id: projetoId },
-            data: { progress },
+            await tx.projeto.update({
+                where: { id: projetoId },
+                data: { progress },
+            });
+
+            return { updated };
         });
 
         return res.json({
@@ -144,7 +149,7 @@ export const updateMilestone = async (req: AuthRequest, res: Response) => {
             milestone: updated,
         });
     } catch (error) {
-        console.error('Update milestone error:', error);
+        logger.error({ err: error }, 'Update milestone error');
         return res.status(500).json({
             error: 'Erro ao atualizar milestone',
         });
@@ -180,7 +185,7 @@ export const deleteMilestone = async (req: AuthRequest, res: Response) => {
             message: 'Milestone excluído com sucesso',
         });
     } catch (error) {
-        console.error('Delete milestone error:', error);
+        logger.error({ err: error }, 'Delete milestone error');
         return res.status(500).json({
             error: 'Erro ao excluir milestone',
         });

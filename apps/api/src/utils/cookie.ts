@@ -1,12 +1,13 @@
 import { Response, CookieOptions } from 'express';
+import { env } from '../config/env';
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = env.NODE_ENV === 'production';
 
 const COOKIE_OPTIONS: CookieOptions = {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? 'strict' : 'lax',
-    maxAge: Number(process.env.JWT_EXPIRES_IN || 86400) * 1000, // converter segundos para ms
+    maxAge: env.JWT_EXPIRES_IN * 1000,
     path: '/',
 };
 

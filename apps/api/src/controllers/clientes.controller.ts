@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import logger from '../config/logger';
 
 export const getClientes = async (req: AuthRequest, res: Response) => {
     try {
@@ -36,7 +37,7 @@ export const getClientes = async (req: AuthRequest, res: Response) => {
 
         return res.json(clientes);
     } catch (error) {
-        console.error('Get clientes error:', error);
+        logger.error({ err: error }, 'Get clientes error');
         return res.status(500).json({
             error: 'Erro ao buscar clientes',
         });
@@ -73,7 +74,7 @@ export const getCliente = async (req: AuthRequest, res: Response) => {
 
         return res.json(cliente);
     } catch (error) {
-        console.error('Get cliente error:', error);
+        logger.error({ err: error }, 'Get cliente error');
         return res.status(500).json({
             error: 'Erro ao buscar cliente',
         });
@@ -126,7 +127,7 @@ export const createCliente = async (req: AuthRequest, res: Response) => {
             cliente,
         });
     } catch (error) {
-        console.error('Create cliente error:', error);
+        logger.error({ err: error }, 'Create cliente error');
         return res.status(500).json({
             error: 'Erro ao criar cliente',
         });
@@ -172,7 +173,7 @@ export const updateCliente = async (req: AuthRequest, res: Response) => {
             cliente,
         });
     } catch (error) {
-        console.error('Update cliente error:', error);
+        logger.error({ err: error }, 'Update cliente error');
         return res.status(500).json({
             error: 'Erro ao atualizar cliente',
         });
@@ -219,7 +220,7 @@ export const deleteCliente = async (req: AuthRequest, res: Response) => {
             message: 'Cliente excluído com sucesso',
         });
     } catch (error) {
-        console.error('Delete cliente error:', error);
+        logger.error({ err: error }, 'Delete cliente error');
         return res.status(500).json({
             error: 'Erro ao excluir cliente',
         });

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import logger from '../config/logger';
 
 export const getProjetos = async (req: AuthRequest, res: Response) => {
     try {
@@ -38,7 +39,7 @@ export const getProjetos = async (req: AuthRequest, res: Response) => {
 
         return res.json(projetos);
     } catch (error) {
-        console.error('Get projetos error:', error);
+        logger.error({ err: error }, 'Get projetos error');
         return res.status(500).json({
             error: 'Erro ao buscar projetos',
         });
@@ -85,7 +86,7 @@ export const getProjeto = async (req: AuthRequest, res: Response) => {
 
         return res.json(projeto);
     } catch (error) {
-        console.error('Get projeto error:', error);
+        logger.error({ err: error }, 'Get projeto error');
         return res.status(500).json({
             error: 'Erro ao buscar projeto',
         });
@@ -144,7 +145,7 @@ export const createProjeto = async (req: AuthRequest, res: Response) => {
             projeto,
         });
     } catch (error) {
-        console.error('Create projeto error:', error);
+        logger.error({ err: error }, 'Create projeto error');
         return res.status(500).json({
             error: 'Erro ao criar projeto',
         });
@@ -190,42 +191,44 @@ export const createProjetoFromOrcamento = async (req: AuthRequest, res: Response
             });
         }
 
-        const lastProjeto = await prisma.projeto.findFirst({
-            where: { userId },
-            orderBy: { createdAt: 'desc' },
-        });
+        const projeto = await prisma.$transaction(async (tx) => {
+            const lastProjeto = await tx.projeto.findFirst({
+                where: { userId },
+                orderBy: { createdAt: 'desc' },
+            });
 
-        let nextNumber = 1;
-        if (lastProjeto && lastProjeto.number) {
-            const lastNumber = parseInt(lastProjeto.number.split('-')[1]);
-            nextNumber = lastNumber + 1;
-        }
+            let nextNumber = 1;
+            if (lastProjeto && lastProjeto.number) {
+                const lastNumber = parseInt(lastProjeto.number.split('-')[1]);
+                nextNumber = lastNumber + 1;
+            }
 
-        const number = `PRJ-${nextNumber.toString().padStart(3, '0')}`;
+            const number = `PRJ-${nextNumber.toString().padStart(3, '0')}`;
 
-        const projeto = await prisma.projeto.create({
-            data: {
-                userId,
-                clienteId: orcamento.clienteId,
-                number,
-                title: orcamento.title,
-                description: orcamento.description,
-                value: orcamento.value,
-                startDate: new Date(),
-                endDate: orcamento.estimatedDays
-                    ? new Date(Date.now() + orcamento.estimatedDays * 24 * 60 * 60 * 1000)
-                    : null,
-                orcamentoId: orcamento.id,
-            },
-            include: {
-                cliente: {
-                    select: {
-                        name: true,
-                        email: true,
-                        company: true,
+            return tx.projeto.create({
+                data: {
+                    userId,
+                    clienteId: orcamento.clienteId,
+                    number,
+                    title: orcamento.title,
+                    description: orcamento.description,
+                    value: orcamento.value,
+                    startDate: new Date(),
+                    endDate: orcamento.estimatedDays
+                        ? new Date(Date.now() + orcamento.estimatedDays * 24 * 60 * 60 * 1000)
+                        : null,
+                    orcamentoId: orcamento.id,
+                },
+                include: {
+                    cliente: {
+                        select: {
+                            name: true,
+                            email: true,
+                            company: true,
+                        },
                     },
                 },
-            },
+            });
         });
 
         return res.status(201).json({
@@ -233,7 +236,7 @@ export const createProjetoFromOrcamento = async (req: AuthRequest, res: Response
             projeto,
         });
     } catch (error) {
-        console.error('Create projeto from orcamento error:', error);
+        logger.error({ err: error }, 'Create projeto from orcamento error');
         return res.status(500).json({
             error: 'Erro ao criar projeto',
         });
@@ -300,7 +303,7 @@ export const updateProjeto = async (req: AuthRequest, res: Response) => {
             projeto,
         });
     } catch (error) {
-        console.error('Update projeto error:', error);
+        logger.error({ err: error }, 'Update projeto error');
         return res.status(500).json({
             error: 'Erro ao atualizar projeto',
         });
@@ -330,7 +333,7 @@ export const deleteProjeto = async (req: AuthRequest, res: Response) => {
             message: 'Projeto excluído com sucesso',
         });
     } catch (error) {
-        console.error('Delete projeto error:', error);
+        logger.error({ err: error }, 'Delete projeto error');
         return res.status(500).json({
             error: 'Erro ao excluir projeto',
         });

@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import logger from '../config/logger';
 
 export const uploadArquivo = async (req: AuthRequest, res: Response) => {
     try {
@@ -53,7 +54,7 @@ export const uploadArquivo = async (req: AuthRequest, res: Response) => {
             arquivo,
         });
     } catch (error) {
-        console.error('Upload arquivo error:', error);
+        logger.error({ err: error }, 'Upload arquivo error');
 
         // Remover arquivo em caso de erro
         if (req.file) {
@@ -94,7 +95,7 @@ export const getArquivos = async (req: AuthRequest, res: Response) => {
 
         return res.json(arquivos);
     } catch (error) {
-        console.error('Get arquivos error:', error);
+        logger.error({ err: error }, 'Get arquivos error');
         return res.status(500).json({
             error: 'Erro ao buscar arquivos',
         });
@@ -124,7 +125,7 @@ export const getArquivo = async (req: AuthRequest, res: Response) => {
 
         return res.json(arquivo);
     } catch (error) {
-        console.error('Get arquivo error:', error);
+        logger.error({ err: error }, 'Get arquivo error');
         return res.status(500).json({
             error: 'Erro ao buscar arquivo',
         });
@@ -161,7 +162,7 @@ export const downloadArquivo = async (req: AuthRequest, res: Response) => {
         // Fazer download
         res.download(filePath, arquivo.name);
     } catch (error) {
-        console.error('Download arquivo error:', error);
+        logger.error({ err: error }, 'Download arquivo error');
         return res.status(500).json({
             error: 'Erro ao fazer download do arquivo',
         });
@@ -186,22 +187,26 @@ export const deleteArquivo = async (req: AuthRequest, res: Response) => {
             });
         }
 
-        // Remover arquivo do sistema de arquivos
-        const filePath = path.join(__dirname, '..', '..', 'uploads', path.basename(arquivo.url));
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-
-        // Remover registro do banco
+        // Remover registro do banco primeiro (operação crítica)
         await prisma.arquivo.delete({
             where: { id },
         });
+
+        // Remover arquivo do sistema de arquivos (best-effort)
+        const filePath = path.join(__dirname, '..', '..', 'uploads', path.basename(arquivo.url));
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        } catch (fsError) {
+            logger.error({ err: fsError }, 'Erro ao remover arquivo do disco');
+        }
 
         return res.json({
             message: 'Arquivo excluído com sucesso',
         });
     } catch (error) {
-        console.error('Delete arquivo error:', error);
+        logger.error({ err: error }, 'Delete arquivo error');
         return res.status(500).json({
             error: 'Erro ao excluir arquivo',
         });

@@ -1,6 +1,11 @@
 import { Response } from 'express';
 import { AuthRequest } from '../../middlewares/auth.middleware';
 
+jest.mock('../../config/logger', () => ({
+    __esModule: true,
+    default: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+}));
+
 const mockPrismaProjetoFindMany = jest.fn();
 const mockPrismaProjetoFindFirst = jest.fn();
 const mockPrismaProjetoCreate = jest.fn();
@@ -8,19 +13,24 @@ const mockPrismaProjetoUpdate = jest.fn();
 const mockPrismaProjetoDelete = jest.fn();
 const mockPrismaOrcamentoFindFirst = jest.fn();
 
+const mockPrismaInstance = {
+    projeto: {
+        findMany: mockPrismaProjetoFindMany,
+        findFirst: mockPrismaProjetoFindFirst,
+        create: mockPrismaProjetoCreate,
+        update: mockPrismaProjetoUpdate,
+        delete: mockPrismaProjetoDelete,
+    },
+    orcamento: {
+        findFirst: mockPrismaOrcamentoFindFirst,
+    },
+};
+
 jest.mock('../../config/database', () => ({
     __esModule: true,
     default: {
-        projeto: {
-            findMany: mockPrismaProjetoFindMany,
-            findFirst: mockPrismaProjetoFindFirst,
-            create: mockPrismaProjetoCreate,
-            update: mockPrismaProjetoUpdate,
-            delete: mockPrismaProjetoDelete,
-        },
-        orcamento: {
-            findFirst: mockPrismaOrcamentoFindFirst,
-        },
+        ...mockPrismaInstance,
+        $transaction: jest.fn((fn) => fn(mockPrismaInstance)),
     },
 }));
 

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import logger from '../config/logger';
 
 export const getRelatorioFinanceiro = async (req: AuthRequest, res: Response) => {
     try {
@@ -212,7 +213,7 @@ export const getRelatorioFinanceiro = async (req: AuthRequest, res: Response) =>
             resumo,
         });
     } catch (error) {
-        console.error('Get relatório financeiro error:', error);
+        logger.error({ err: error }, 'Get relatório financeiro error');
         return res.status(500).json({
             error: 'Erro ao gerar relatório',
         });
@@ -275,7 +276,7 @@ export const getComparacaoAnual = async (req: AuthRequest, res: Response) => {
             crescimento: Number(crescimento),
         });
     } catch (error) {
-        console.error('Get comparação anual error:', error);
+        logger.error({ err: error }, 'Get comparação anual error');
         return res.status(500).json({
             error: 'Erro ao gerar comparação',
         });

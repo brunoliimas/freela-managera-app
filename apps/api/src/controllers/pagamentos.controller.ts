@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import logger from '../config/logger';
 
 export const getPagamentos = async (req: AuthRequest, res: Response) => {
     try {
@@ -54,7 +55,7 @@ export const getPagamentos = async (req: AuthRequest, res: Response) => {
 
         return res.json(pagamentosComStatus);
     } catch (error) {
-        console.error('Get pagamentos error:', error);
+        logger.error({ err: error }, 'Get pagamentos error');
         return res.status(500).json({
             error: 'Erro ao buscar pagamentos',
         });
@@ -88,7 +89,7 @@ export const getPagamento = async (req: AuthRequest, res: Response) => {
 
         return res.json(pagamento);
     } catch (error) {
-        console.error('Get pagamento error:', error);
+        logger.error({ err: error }, 'Get pagamento error');
         return res.status(500).json({
             error: 'Erro ao buscar pagamento',
         });
@@ -141,7 +142,7 @@ export const createPagamento = async (req: AuthRequest, res: Response) => {
             pagamento,
         });
     } catch (error) {
-        console.error('Create pagamento error:', error);
+        logger.error({ err: error }, 'Create pagamento error');
         return res.status(500).json({
             error: 'Erro ao criar pagamento',
         });
@@ -194,7 +195,7 @@ export const createParcelas = async (req: AuthRequest, res: Response) => {
             count: pagamentosCriados.count,
         });
     } catch (error) {
-        console.error('Create parcelas error:', error);
+        logger.error({ err: error }, 'Create parcelas error');
         return res.status(500).json({
             error: 'Erro ao criar parcelas',
         });
@@ -248,7 +249,7 @@ export const updatePagamento = async (req: AuthRequest, res: Response) => {
             pagamento,
         });
     } catch (error) {
-        console.error('Update pagamento error:', error);
+        logger.error({ err: error }, 'Update pagamento error');
         return res.status(500).json({
             error: 'Erro ao atualizar pagamento',
         });
@@ -290,7 +291,7 @@ export const marcarComoPago = async (req: AuthRequest, res: Response) => {
             pagamento,
         });
     } catch (error) {
-        console.error('Marcar como pago error:', error);
+        logger.error({ err: error }, 'Marcar como pago error');
         return res.status(500).json({
             error: 'Erro ao marcar pagamento como pago',
         });
@@ -323,7 +324,7 @@ export const deletePagamento = async (req: AuthRequest, res: Response) => {
             message: 'Pagamento excluído com sucesso',
         });
     } catch (error) {
-        console.error('Delete pagamento error:', error);
+        logger.error({ err: error }, 'Delete pagamento error');
         return res.status(500).json({
             error: 'Erro ao excluir pagamento',
         });
@@ -391,7 +392,7 @@ export const getResumoFinanceiro = async (req: AuthRequest, res: Response) => {
             pagamentosProximos,
         });
     } catch (error) {
-        console.error('Get resumo financeiro error:', error);
+        logger.error({ err: error }, 'Get resumo financeiro error');
         return res.status(500).json({
             error: 'Erro ao buscar resumo financeiro',
         });

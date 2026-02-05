@@ -41,6 +41,28 @@ jest.mock('../../utils/cookie', () => ({
     clearTokenCookie: (...args: any[]) => mockClearTokenCookie(...args),
 }));
 
+// Mock do logger
+jest.mock('../../config/logger', () => ({
+    __esModule: true,
+    default: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+}));
+
+// Mock do env
+jest.mock('../../config/env', () => ({
+    env: {
+        DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+        JWT_SECRET: 'test-secret-key-with-minimum-32-chars-for-testing',
+        JWT_EXPIRES_IN: 86400,
+        PORT: 3001,
+        NODE_ENV: 'test',
+        FRONTEND_URL: 'http://localhost:3000',
+        SMTP_HOST: 'smtp.test.com',
+        SMTP_PORT: 587,
+        APP_NAME: 'TestApp',
+        APP_URL: 'http://localhost:3000',
+    },
+}));
+
 // Mock do email
 const mockSendEmail = jest.fn();
 jest.mock('../../config/email', () => ({

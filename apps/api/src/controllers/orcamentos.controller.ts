@@ -4,6 +4,7 @@ import { AuthRequest } from '../middlewares/auth.middleware';
 import { gerarOrcamentoPDF } from '../utils/pdf-generator';
 import { prepareDadosParaPDF } from '../utils/pdf-data';
 import { NotificacaoService } from '../services/notificacao.service';
+import logger from '../config/logger';
 
 
 export const gerarPDFOrcamento = async (req: AuthRequest, res: Response) => {
@@ -38,7 +39,7 @@ export const gerarPDFOrcamento = async (req: AuthRequest, res: Response) => {
         // Gerar e enviar PDF
         gerarOrcamentoPDF(pdfData, res);
     } catch (error: any) {
-        console.error('Gerar PDF error:', error);
+        logger.error({ err: error }, 'Gerar PDF error');
 
         // Se for erro de validação, retorna 400
         if (error.message && error.message.includes('obrigatório')) {
@@ -90,7 +91,7 @@ export const getOrcamentos = async (req: AuthRequest, res: Response) => {
 
         return res.json(orcamentos);
     } catch (error) {
-        console.error('Get orcamentos error:', error);
+        logger.error({ err: error }, 'Get orcamentos error');
         return res.status(500).json({
             error: 'Erro ao buscar orçamentos',
         });
@@ -130,7 +131,7 @@ export const getOrcamento = async (req: AuthRequest, res: Response) => {
 
         return res.json(orcamento);
     } catch (error) {
-        console.error('Get orcamento error:', error);
+        logger.error({ err: error }, 'Get orcamento error');
         return res.status(500).json({
             error: 'Erro ao buscar orçamento',
         });
@@ -154,6 +155,17 @@ export const createOrcamento = async (req: AuthRequest, res: Response) => {
         if (!clienteId || !title || !description || !value) {
             return res.status(400).json({
                 error: 'Cliente, título, descrição e valor são obrigatórios',
+            });
+        }
+
+        // Verificar que o cliente pertence ao usuário autenticado
+        const clienteExists = await prisma.cliente.findFirst({
+            where: { id: clienteId, userId },
+        });
+
+        if (!clienteExists) {
+            return res.status(404).json({
+                error: 'Cliente não encontrado',
             });
         }
 
@@ -184,24 +196,28 @@ export const createOrcamento = async (req: AuthRequest, res: Response) => {
 
         if (solicitacaoId) {
             data.solicitacaoId = solicitacaoId;
-
-            await prisma.solicitacao.update({
-                where: { id: solicitacaoId },
-                data: { status: 'ORCAMENTO_ENVIADO' },
-            });
         }
 
-        const orcamento = await prisma.orcamento.create({
-            data,
-            include: {
-                cliente: {
-                    select: {
-                        name: true,
-                        email: true,
-                        company: true,
+        const orcamento = await prisma.$transaction(async (tx) => {
+            if (solicitacaoId) {
+                await tx.solicitacao.update({
+                    where: { id: solicitacaoId },
+                    data: { status: 'ORCAMENTO_ENVIADO' },
+                });
+            }
+
+            return tx.orcamento.create({
+                data,
+                include: {
+                    cliente: {
+                        select: {
+                            name: true,
+                            email: true,
+                            company: true,
+                        },
                     },
                 },
-            },
+            });
         });
 
         return res.status(201).json({
@@ -209,7 +225,7 @@ export const createOrcamento = async (req: AuthRequest, res: Response) => {
             orcamento,
         });
     } catch (error) {
-        console.error('Create orcamento error:', error);
+        logger.error({ err: error }, 'Create orcamento error');
         return res.status(500).json({
             error: 'Erro ao criar orçamento',
         });
@@ -257,7 +273,7 @@ export const updateOrcamento = async (req: AuthRequest, res: Response) => {
 
         if (status === 'APROVADO' && orcamentoExists.status !== 'APROVADO') {
             NotificacaoService.notificarOrcamentoAprovado(id).catch(err => {
-                console.error('Erro ao enviar notificação:', err);
+                logger.error({ err: err }, 'Erro ao enviar notificação');
             });
         }
 
@@ -266,7 +282,7 @@ export const updateOrcamento = async (req: AuthRequest, res: Response) => {
             orcamento,
         });
     } catch (error) {
-        console.error('Update orcamento error:', error);
+        logger.error({ err: error }, 'Update orcamento error');
         return res.status(500).json({
             error: 'Erro ao atualizar orçamento',
         });
@@ -301,7 +317,7 @@ export const enviarOrcamentoPorEmail = async (req: AuthRequest, res: Response) =
             });
         }
     } catch (error) {
-        console.error('Enviar orçamento por email error:', error);
+        logger.error({ err: error }, 'Enviar orçamento por email error');
         return res.status(500).json({
             error: 'Erro ao enviar orçamento por email',
         });
@@ -340,7 +356,7 @@ export const deleteOrcamento = async (req: AuthRequest, res: Response) => {
             message: 'Orçamento excluído com sucesso',
         });
     } catch (error) {
-        console.error('Delete orcamento error:', error);
+        logger.error({ err: error }, 'Delete orcamento error');
         return res.status(500).json({
             error: 'Erro ao excluir orçamento',
         });

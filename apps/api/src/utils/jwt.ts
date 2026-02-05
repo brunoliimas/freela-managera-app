@@ -1,17 +1,8 @@
 import jwt, { SignOptions, Secret } from 'jsonwebtoken';
+import { env } from '../config/env';
 
-const getJwtSecret = (): Secret => {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-        throw new Error(
-            'JWT_SECRET não está definido. Configure a variável de ambiente JWT_SECRET antes de iniciar o servidor.'
-        );
-    }
-    return secret;
-};
-
-const JWT_SECRET: Secret = getJwtSecret();
-const JWT_EXPIRES_IN: number = Number(process.env.JWT_EXPIRES_IN) || 60 * 60 * 24; // 1 dia
+const JWT_SECRET: Secret = env.JWT_SECRET;
+const JWT_EXPIRES_IN: number = env.JWT_EXPIRES_IN;
 
 export interface JwtPayload {
     userId: string;

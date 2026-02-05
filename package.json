@@ -13,12 +13,23 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "test:coverage": "turbo run test:coverage"
+    "test:coverage": "turbo run test:coverage",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "lint-staged": {
+    "apps/api/src/**/*.ts": [
+      "bash -c 'cd apps/api && npx tsc --noEmit'"
+    ],
+    "apps/web/src/**/*.{ts,tsx}": [
+      "bash -c 'cd apps/web && npx eslint --fix'"
+    ]
+  },
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "turbo": "^2.7.4"
   }
 }

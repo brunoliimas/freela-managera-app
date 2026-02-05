@@ -253,9 +253,10 @@ export default function OrcamentoDetailsPage({
                                     </div>
                                     <div className="bg-slate-50 p-4 rounded-lg space-y-2">
                                         <p className="font-medium">{orcamento.solicitacao.title}</p>
-                                        <p className="text-sm text-slate-600">{orcamento.solicitacao.description}</p>
+                                        <RichTextDisplay content={orcamento.solicitacao.description} />
+                                        <Separator className='my-4'/>
                                         {orcamento.solicitacao.budget && (
-                                            <p className="text-sm text-slate-500">
+                                            <p className="text-md font-bold text-slate-500">
                                                 Orçamento estimado pelo cliente: {formatCurrency(orcamento.solicitacao.budget)}
                                             </p>
                                         )}
@@ -267,6 +268,43 @@ export default function OrcamentoDetailsPage({
                 </Card>
 
                 <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Status</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Select
+                                value={orcamento.status}
+                                onValueChange={handleStatusChange}
+                                disabled={updatingStatus}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="AGUARDANDO">Aguardando</SelectItem>
+                                    <SelectItem value="ENVIADO">Enviado</SelectItem>
+                                    <SelectItem value="APROVADO">Aprovado</SelectItem>
+                                    <SelectItem value="RECUSADO">Recusado</SelectItem>
+                                    <SelectItem value="EXPIRADO">Expirado</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-slate-400 mt-2">
+                                Criado em {formatDate(orcamento.createdAt)}
+                            </p>
+                            {orcamento.sentAt && (
+                                <p className="text-xs text-slate-500">
+                                    Enviado em {formatDate(orcamento.sentAt)}
+                                </p>
+                            )}
+                            {orcamento.approvedAt && (
+                                <p className="text-xs text-slate-500">
+                                    Aprovado em {formatDate(orcamento.approvedAt)}
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
+
                     <Card>
                         <CardHeader>
                             <CardTitle>Informações do Cliente</CardTitle>
@@ -318,6 +356,15 @@ export default function OrcamentoDetailsPage({
                             <div className="flex items-center gap-3">
                                 <DollarSign className="h-5 w-5 text-slate-400" />
                                 <div>
+                                    <p className="text-sm text-slate-600">Budget do cliente</p>
+                                    <p className="text-2xl font-bold text-slate-600">
+                                        {formatCurrency(orcamento.solicitacao?.budget || 0)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <DollarSign className="h-5 w-5 text-slate-400" />
+                                <div>
                                     <p className="text-sm text-slate-600">Valor do Orçamento</p>
                                     <p className="text-2xl font-bold text-green-600">
                                         {formatCurrency(orcamento.value)}
@@ -347,42 +394,7 @@ export default function OrcamentoDetailsPage({
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Alterar Status</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Select
-                                value={orcamento.status}
-                                onValueChange={handleStatusChange}
-                                disabled={updatingStatus}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="AGUARDANDO">Aguardando</SelectItem>
-                                    <SelectItem value="ENVIADO">Enviado</SelectItem>
-                                    <SelectItem value="APROVADO">Aprovado</SelectItem>
-                                    <SelectItem value="RECUSADO">Recusado</SelectItem>
-                                    <SelectItem value="EXPIRADO">Expirado</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <p className="text-xs text-slate-500 mt-2">
-                                Criado em {formatDate(orcamento.createdAt)}
-                            </p>
-                            {orcamento.sentAt && (
-                                <p className="text-xs text-slate-500">
-                                    Enviado em {formatDate(orcamento.sentAt)}
-                                </p>
-                            )}
-                            {orcamento.approvedAt && (
-                                <p className="text-xs text-slate-500">
-                                    Aprovado em {formatDate(orcamento.approvedAt)}
-                                </p>
-                            )}
-                        </CardContent>
-                    </Card>
+                    
 
                     {orcamento.projeto && (
                         <Card className="border-green-200 bg-green-50">

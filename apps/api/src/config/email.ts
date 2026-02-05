@@ -1,26 +1,25 @@
 import nodemailer from 'nodemailer';
+import { env } from './env';
+import logger from './logger';
 
-// Criar transporter (configuração do email)
 export const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false, // true para 465, false para outros
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    secure: false,
     auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: env.SMTP_USER,
+        pass: env.SMTP_PASS,
     },
 });
 
-// Verificar conexão
-transporter.verify((error, success) => {
+transporter.verify((error) => {
     if (error) {
-        console.error('❌ Erro na configuração de email:', error);
+        logger.error({ err: error }, 'Erro na configuração de email');
     } else {
-        console.log('✅ Servidor de email pronto');
+        logger.info('Servidor de email pronto');
     }
 });
 
-// Função auxiliar para enviar email
 export async function sendEmail({
     to,
     subject,
@@ -34,17 +33,17 @@ export async function sendEmail({
 }) {
     try {
         const info = await transporter.sendMail({
-            from: `"${process.env.APP_NAME || 'FreelanceManager'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+            from: `"${env.APP_NAME}" <${env.SMTP_FROM || env.SMTP_USER}>`,
             to,
             subject,
             html,
             text: text || subject,
         });
 
-        console.log('✅ Email enviado:', info.messageId);
+        logger.info({ messageId: info.messageId }, 'Email enviado');
         return { success: true, messageId: info.messageId };
     } catch (error) {
-        console.error('❌ Erro ao enviar email:', error);
+        logger.error({ err: error }, 'Erro ao enviar email');
         return { success: false, error };
     }
 }

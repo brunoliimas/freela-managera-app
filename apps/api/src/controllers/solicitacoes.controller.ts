@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { NotificacaoService } from '../services/notificacao.service';
+import logger from '../config/logger';
 
 // Rota PÚBLICA - Cliente cria solicitação
 export const createSolicitacao = async (req: Request, res: Response) => {
@@ -46,7 +47,7 @@ export const createSolicitacao = async (req: Request, res: Response) => {
         });
 
         NotificacaoService.notificarNovaSolicitacao(solicitacao.id).catch(err => {
-            console.error('Erro ao enviar notificação:', err);
+            logger.error({ err: err }, 'Erro ao enviar notificação');
             // Não bloqueia a resposta se email falhar
         });
 
@@ -55,7 +56,7 @@ export const createSolicitacao = async (req: Request, res: Response) => {
             solicitacao,
         });
     } catch (error) {
-        console.error('Create solicitacao error:', error);
+        logger.error({ err: error }, 'Create solicitacao error');
         return res.status(500).json({
             error: 'Erro ao criar solicitação',
         });
@@ -100,7 +101,7 @@ export const findClienteByCnpj = async (req: Request, res: Response) => {
 
         return res.json(cliente);
     } catch (error) {
-        console.error('Find cliente by CNPJ error:', error);
+        logger.error({ err: error }, 'Find cliente by CNPJ error');
         return res.status(500).json({
             error: 'Erro ao buscar cliente',
         });
@@ -110,7 +111,7 @@ export const findClienteByCnpj = async (req: Request, res: Response) => {
 // Rota PÚBLICA - Criar novo cliente (cadastro público)
 export const createClientePublic = async (req: Request, res: Response) => {
     try {
-        const { name, email, phone, company, cnpj } = req.body;
+        const { name, email, phone, company, cnpj, userId } = req.body;
 
         if (!name || !email) {
             return res.status(400).json({
@@ -118,23 +119,31 @@ export const createClientePublic = async (req: Request, res: Response) => {
             });
         }
 
-        // Verificar se email já existe
+        if (!userId) {
+            return res.status(400).json({
+                error: 'Identificação do profissional é obrigatória',
+            });
+        }
+
+        // Verificar se o profissional (freelancer) existe
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                error: 'Profissional não encontrado',
+            });
+        }
+
+        // Verificar se email já existe para este profissional
         const clienteExists = await prisma.cliente.findFirst({
-            where: { email },
+            where: { email, userId: user.id },
         });
 
         if (clienteExists) {
             return res.status(400).json({
                 error: 'Já existe um cliente com este email',
-            });
-        }
-
-        // Pegar o primeiro usuário (você) - ajuste conforme necessário
-        const user = await prisma.user.findFirst();
-
-        if (!user) {
-            return res.status(500).json({
-                error: 'Erro ao criar cliente - usuário não encontrado',
             });
         }
 
@@ -162,7 +171,7 @@ export const createClientePublic = async (req: Request, res: Response) => {
             cliente,
         });
     } catch (error) {
-        console.error('Create cliente public error:', error);
+        logger.error({ err: error }, 'Create cliente public error');
         return res.status(500).json({
             error: 'Erro ao criar cadastro',
         });
@@ -209,7 +218,7 @@ export const getSolicitacoes = async (req: AuthRequest, res: Response) => {
 
         return res.json(solicitacoes);
     } catch (error) {
-        console.error('Get solicitacoes error:', error);
+        logger.error({ err: error }, 'Get solicitacoes error');
         return res.status(500).json({
             error: 'Erro ao buscar solicitações',
         });
@@ -242,7 +251,7 @@ export const getSolicitacao = async (req: AuthRequest, res: Response) => {
 
         return res.json(solicitacao);
     } catch (error) {
-        console.error('Get solicitacao error:', error);
+        logger.error({ err: error }, 'Get solicitacao error');
         return res.status(500).json({
             error: 'Erro ao buscar solicitação',
         });
@@ -283,7 +292,7 @@ export const updateSolicitacaoStatus = async (req: AuthRequest, res: Response) =
             solicitacao: updated,
         });
     } catch (error) {
-        console.error('Update solicitacao status error:', error);
+        logger.error({ err: error }, 'Update solicitacao status error');
         return res.status(500).json({
             error: 'Erro ao atualizar status',
         });

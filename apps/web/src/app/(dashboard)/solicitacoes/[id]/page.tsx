@@ -21,6 +21,7 @@ import { formatDate, formatCurrency } from '@/lib/format';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { RichTextDisplay } from '@/components/ui/rich-text-display';
 
 const statusColors: Record<string, string> = {
     NOVA: 'bg-orange-500',
@@ -163,7 +164,8 @@ export default function SolicitacaoDetailsPage({
                     <CardContent className="space-y-6">
                         <div>
                             <p className="text-sm text-slate-600 mb-2">Descrição</p>
-                            <p className="text-slate-800 whitespace-pre-wrap">{solicitacao.description}</p>
+                            <RichTextDisplay content={solicitacao.description} />
+                            {/* <p className="text-slate-800 whitespace-pre-wrap">{solicitacao.description}</p> */}
                         </div>
 
                         <Separator />

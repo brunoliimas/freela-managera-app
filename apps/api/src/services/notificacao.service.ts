@@ -7,9 +7,9 @@ import {
     templateOrcamentoCliente,
 } from '../templates/email-templates';
 import prisma from '../config/database';
+import logger from '../config/logger';
 
 export class NotificacaoService {
-    // Notificar nova solicitação
     static async notificarNovaSolicitacao(solicitacaoId: string) {
         try {
             const solicitacao = await prisma.solicitacao.findUnique({
@@ -44,13 +44,12 @@ export class NotificacaoService {
                 html,
             });
 
-            console.log('✅ Email de nova solicitação enviado');
+            logger.info('Email de nova solicitação enviado');
         } catch (error) {
-            console.error('❌ Erro ao notificar nova solicitação:', error);
+            logger.error({ err: error }, 'Erro ao notificar nova solicitação');
         }
     }
 
-    // Notificar orçamento aprovado
     static async notificarOrcamentoAprovado(orcamentoId: string) {
         try {
             const orcamento = await prisma.orcamento.findUnique({
@@ -76,13 +75,12 @@ export class NotificacaoService {
                 html,
             });
 
-            console.log('✅ Email de orçamento aprovado enviado');
+            logger.info('Email de orçamento aprovado enviado');
         } catch (error) {
-            console.error('❌ Erro ao notificar orçamento aprovado:', error);
+            logger.error({ err: error }, 'Erro ao notificar orçamento aprovado');
         }
     }
 
-    // Enviar orçamento para cliente
     static async enviarOrcamentoParaCliente(orcamentoId: string) {
         try {
             const orcamento = await prisma.orcamento.findUnique({
@@ -117,7 +115,6 @@ export class NotificacaoService {
                 html,
             });
 
-            // Atualizar status e data de envio
             await prisma.orcamento.update({
                 where: { id: orcamentoId },
                 data: {
@@ -126,19 +123,18 @@ export class NotificacaoService {
                 },
             });
 
-            console.log('✅ Orçamento enviado para cliente');
+            logger.info('Orçamento enviado para cliente');
             return { success: true };
         } catch (error) {
-            console.error('❌ Erro ao enviar orçamento para cliente:', error);
+            logger.error({ err: error }, 'Erro ao enviar orçamento para cliente');
             return { success: false, error };
         }
     }
 
-    // Verificar pagamentos próximos (executado por cron)
     static async verificarPagamentosProximos() {
         try {
             const dataLimite = new Date();
-            dataLimite.setDate(dataLimite.getDate() + 7); // 7 dias
+            dataLimite.setDate(dataLimite.getDate() + 7);
 
             const pagamentosProximos = await prisma.pagamento.findMany({
                 where: {
@@ -175,18 +171,17 @@ export class NotificacaoService {
 
                 await sendEmail({
                     to: pagamento.user.email,
-                    subject: `⏰ Lembrete: Pagamento vence em ${diasRestantes} dia(s)`,
+                    subject: `Lembrete: Pagamento vence em ${diasRestantes} dia(s)`,
                     html,
                 });
             }
 
-            console.log(`✅ ${pagamentosProximos.length} lembretes de pagamento enviados`);
+            logger.info({ count: pagamentosProximos.length }, 'Lembretes de pagamento enviados');
         } catch (error) {
-            console.error('❌ Erro ao verificar pagamentos próximos:', error);
+            logger.error({ err: error }, 'Erro ao verificar pagamentos próximos');
         }
     }
 
-    // Verificar pagamentos vencidos (executado por cron)
     static async verificarPagamentosVencidos() {
         try {
             const pagamentosVencidos = await prisma.pagamento.findMany({
@@ -207,7 +202,6 @@ export class NotificacaoService {
             });
 
             for (const pagamento of pagamentosVencidos) {
-                // Atualizar status para ATRASADO
                 await prisma.pagamento.update({
                     where: { id: pagamento.id },
                     data: { status: 'ATRASADO' },
@@ -230,14 +224,14 @@ export class NotificacaoService {
 
                 await sendEmail({
                     to: pagamento.user.email,
-                    subject: `🚨 Pagamento vencido há ${diasAtraso} dia(s)`,
+                    subject: `Pagamento vencido há ${diasAtraso} dia(s)`,
                     html,
                 });
             }
 
-            console.log(`✅ ${pagamentosVencidos.length} alertas de pagamento vencido enviados`);
+            logger.info({ count: pagamentosVencidos.length }, 'Alertas de pagamento vencido enviados');
         } catch (error) {
-            console.error('❌ Erro ao verificar pagamentos vencidos:', error);
+            logger.error({ err: error }, 'Erro ao verificar pagamentos vencidos');
         }
     }
 }

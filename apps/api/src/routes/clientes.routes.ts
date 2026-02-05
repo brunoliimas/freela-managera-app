@@ -7,6 +7,8 @@ import {
     deleteCliente,
 } from '../controllers/clientes.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
+import { validate } from '../middlewares/validate.middleware';
+import { createClienteSchema } from '../validations/clientes.validations';
 
 const router = Router();
 
@@ -15,7 +17,7 @@ router.use(authMiddleware);
 
 router.get('/', getClientes);
 router.get('/:id', getCliente);
-router.post('/', createCliente);
+router.post('/', validate(createClienteSchema), createCliente);
 router.put('/:id', updateCliente);
 router.delete('/:id', deleteCliente);
 

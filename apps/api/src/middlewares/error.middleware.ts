@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
+import { AppError } from '../utils/errors';
+import logger from '../config/logger';
 
 export const errorMiddleware = (
     error: Error,
@@ -6,7 +8,13 @@ export const errorMiddleware = (
     res: Response,
     next: NextFunction
 ) => {
-    console.error('Error:', error);
+    logger.error({ err: error }, 'Unhandled error');
+
+    if (error instanceof AppError) {
+        return res.status(error.statusCode).json({
+            error: error.message,
+        });
+    }
 
     if (error.name === 'ValidationError') {
         return res.status(400).json({
