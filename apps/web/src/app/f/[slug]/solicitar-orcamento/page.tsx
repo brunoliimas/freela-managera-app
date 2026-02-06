@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, UserPlus, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,11 +11,39 @@ import apiPublic from '@/lib/api-public';
 import { toast } from 'sonner';
 import axios from 'axios';
 
-export default function SolicitarOrcamentoPage() {
+interface Freelancer {
+    id: string;
+    name: string;
+    company: string | null;
+    bio: string | null;
+    avatar: string | null;
+    slug: string;
+}
+
+export default function SolicitarOrcamentoPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = use(params);
     const router = useRouter();
     const [option, setOption] = useState<'cliente' | 'cadastro' | null>(null);
     const [cnpj, setCnpj] = useState('');
     const [loading, setLoading] = useState(false);
+    const [freelancer, setFreelancer] = useState<Freelancer | null>(null);
+    const [loadingFreelancer, setLoadingFreelancer] = useState(true);
+
+    // Resolver slug → userId e salvar no sessionStorage
+    useEffect(() => {
+        const resolveSlug = async () => {
+            try {
+                const res = await apiPublic.get(`/solicitacoes/freelancer/${slug}`);
+                setFreelancer(res.data);
+                sessionStorage.setItem('freelancerUserId', res.data.id);
+            } catch {
+                toast.error('Profissional não encontrado');
+            } finally {
+                setLoadingFreelancer(false);
+            }
+        };
+        resolveSlug();
+    }, [slug]);
 
     const handleBuscarCNPJ = async () => {
         if (!cnpj) {
@@ -28,11 +56,10 @@ export default function SolicitarOrcamentoPage() {
             const cnpjClean = cnpj.replace(/[^\d]/g, '');
             const response = await apiPublic.get(`/solicitacoes/cliente/buscar-cnpj/${cnpjClean}`);
 
-            // Salvar dados do cliente no sessionStorage
             sessionStorage.setItem('cliente', JSON.stringify(response.data));
 
             toast.success('Cliente encontrado!');
-            router.push('/solicitar-orcamento/briefing');
+            router.push(`/f/${slug}/solicitar-orcamento/briefing`);
         } catch (error) {
             if (axios.isAxiosError(error) && error.response?.status === 404) {
                 toast.error('CNPJ não encontrado. Faça seu cadastro primeiro.');
@@ -45,19 +72,36 @@ export default function SolicitarOrcamentoPage() {
         }
     };
 
-    // const handleNovoCadastro = () => {
-    //     router.push('/solicitar-orcamento/cadastro');
-    // };
-
     useEffect(() => {
         if (option === 'cadastro') {
-            router.push('/solicitar-orcamento/cadastro');
+            router.push(`/f/${slug}/solicitar-orcamento/cadastro`);
         }
-    }, [option, router]);
+    }, [option, router, slug]);
+
+    if (loadingFreelancer) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
+    if (!freelancer) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 p-4">
+                <Card className="w-full max-w-md text-center">
+                    <CardContent className="pt-8 pb-8">
+                        <p className="text-slate-600 text-lg">Profissional não encontrado</p>
+                        <p className="text-slate-500 text-sm mt-2">Verifique o link e tente novamente</p>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     if (option === null) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-slate-100 p-4">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 p-4">
                 <div className="w-full max-w-4xl space-y-8">
                     {/* Header */}
                     <div className="text-center">
@@ -65,13 +109,12 @@ export default function SolicitarOrcamentoPage() {
                             Solicitar Orçamento
                         </h1>
                         <p className="text-lg text-slate-600">
-                            Escolha uma opção para começar
+                            {freelancer.company || freelancer.name}
                         </p>
                     </div>
 
                     {/* Opções */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Já sou cliente */}
                         <Card
                             className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-500"
                             onClick={() => setOption('cliente')}
@@ -93,7 +136,6 @@ export default function SolicitarOrcamentoPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Ainda não sou cliente */}
                         <Card
                             className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-green-500"
                             onClick={() => setOption('cadastro')}

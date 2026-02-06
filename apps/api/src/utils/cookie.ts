@@ -23,3 +23,16 @@ export const clearTokenCookie = (res: Response): void => {
         path: '/',
     });
 };
+
+export const setClientCookie = (res: Response, token: string): void => {
+    res.cookie('client_token', token, COOKIE_OPTIONS);
+};
+
+export const clearClientCookie = (res: Response): void => {
+    res.clearCookie('client_token', {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
+        path: '/',
+    });
+};

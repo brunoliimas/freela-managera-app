@@ -17,6 +17,7 @@ model User {
   email    String  @unique
   name     String
   password String
+  slug     String? @unique
   avatar   String?
 
   // Dados do freelancer
@@ -64,9 +65,10 @@ model Cliente {
   id String @id @default(cuid())
 
   // Dados básicos
-  name  String
-  email String
-  phone String?
+  name   String
+  email  String
+  phone  String?
+  avatar String?
 
   // Dados da empresa (se for PJ)
   company String?
@@ -83,6 +85,10 @@ model Cliente {
 
   // Status
   active Boolean @default(true)
+
+  // Portal do cliente (magic link auth)
+  portalToken        String?
+  portalTokenExpires DateTime?
 
   // Timestamps
   createdAt DateTime @default(now())

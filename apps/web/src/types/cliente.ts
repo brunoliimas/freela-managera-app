@@ -10,6 +10,7 @@ export interface Cliente {
     state?: string;
     zipCode?: string;
     notes?: string;
+    avatar?: string;
     active: boolean;
     createdAt: string;
     updatedAt: string;

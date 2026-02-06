@@ -75,6 +75,12 @@ jest.mock('../../templates/email-templates', () => ({
     templateRecuperacaoSenha: (...args: any[]) => mockTemplateRecuperacaoSenha(...args),
 }));
 
+// Mock do slugify
+const mockGenerateUniqueSlug = jest.fn().mockResolvedValue('test-user');
+jest.mock('../../utils/slugify', () => ({
+    generateUniqueSlug: (...args: any[]) => mockGenerateUniqueSlug(...args),
+}));
+
 // Importar depois dos mocks
 import { register, login, logout, forgotPassword, resetPassword, getProfile, updateProfile } from '../../controllers/auth.controller';
 
@@ -161,6 +167,7 @@ describe('Auth Controller', () => {
                     password: 'hashedPassword',
                     phone: undefined,
                     company: undefined,
+                    slug: 'test-user',
                 },
                 select: expect.objectContaining({
                     id: true,
@@ -169,6 +176,7 @@ describe('Auth Controller', () => {
                     phone: true,
                     company: true,
                     plan: true,
+                    slug: true,
                     createdAt: true,
                 }),
             });
@@ -360,8 +368,11 @@ describe('Auth Controller', () => {
                     password: 'hashedPassword',
                     phone: '11999999999',
                     company: 'Test Company',
+                    slug: 'test-user',
                 },
-                select: expect.any(Object),
+                select: expect.objectContaining({
+                    slug: true,
+                }),
             });
 
             expect(mockResponse.status).toHaveBeenCalledWith(201);

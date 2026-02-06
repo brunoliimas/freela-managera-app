@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { register, login, logout, forgotPassword, resetPassword, getProfile, updateProfile, changePassword } from '../controllers/auth.controller';
+import { register, login, logout, forgotPassword, resetPassword, getProfile, updateProfile, changePassword, uploadAvatar } from '../controllers/auth.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { authRateLimit } from '../middlewares/rate-limit.middleware';
 import { validate } from '../middlewares/validate.middleware';
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema, updateProfileSchema } from '../validations/auth.validations';
+import { upload } from '../config/upload';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.post('/reset-password', authRateLimit, validate(resetPasswordSchema), res
 router.get('/profile', authMiddleware, getProfile);
 router.put('/profile', authMiddleware, validate(updateProfileSchema), updateProfile);
 router.put('/change-password', authMiddleware, validate(changePasswordSchema), changePassword);
+router.post('/avatar', authMiddleware, upload.single('avatar'), uploadAvatar);
 
 export default router;

@@ -11,12 +11,13 @@ import {
     LogOut,
     BarChart3,
     Paperclip,
-    CreditCard
+    CreditCard,
+    Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
 const menuItems = [
@@ -24,6 +25,11 @@ const menuItems = [
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutDashboard,
+    },
+    {
+        title: 'Calendário',
+        href: '/calendario',
+        icon: Calendar,
     },
     {
         title: 'Clientes',
@@ -112,6 +118,12 @@ export function Sidebar() {
 
                 <div className="flex items-center gap-3 px-4 py-3">
                     <Avatar>
+                        {user?.avatar && (
+                            <AvatarImage
+                                src={user.avatar.startsWith('http') ? user.avatar : `${process.env.NEXT_PUBLIC_API_URL}${user.avatar}`}
+                                alt={user.name}
+                            />
+                        )}
                         <AvatarFallback className="bg-blue-600">
                             {user?.name ? getInitials(user.name) : 'U'}
                         </AvatarFallback>

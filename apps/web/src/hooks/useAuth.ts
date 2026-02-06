@@ -12,6 +12,7 @@ interface User {
     email: string;
     phone?: string;
     company?: string;
+    avatar?: string;
     plan: string;
 }
 

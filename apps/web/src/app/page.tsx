@@ -1,9 +1,13 @@
+'use client';
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, FileText, FolderKanban, CreditCard, ArrowRight, CheckCircle2, Send, Briefcase } from "lucide-react";
+import { useLandingTheme } from "@/hooks/useTheme";
 
 export default function Home() {
+    useLandingTheme();
     return (
         <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
             {/* Header */}

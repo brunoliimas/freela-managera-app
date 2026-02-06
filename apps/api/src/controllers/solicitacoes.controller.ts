@@ -63,6 +63,38 @@ export const createSolicitacao = async (req: Request, res: Response) => {
     }
 };
 
+// Rota PÚBLICA - Buscar freelancer por slug
+export const getFreelancerBySlug = async (req: Request, res: Response) => {
+    try {
+        const { slug } = req.params;
+
+        const user = await prisma.user.findUnique({
+            where: { slug },
+            select: {
+                id: true,
+                name: true,
+                company: true,
+                bio: true,
+                avatar: true,
+                slug: true,
+            },
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                error: 'Profissional não encontrado',
+            });
+        }
+
+        return res.json(user);
+    } catch (error) {
+        logger.error({ err: error }, 'Get freelancer by slug error');
+        return res.status(500).json({
+            error: 'Erro ao buscar profissional',
+        });
+    }
+};
+
 // Rota PÚBLICA - Buscar cliente por CNPJ
 export const findClienteByCnpj = async (req: Request, res: Response) => {
     try {

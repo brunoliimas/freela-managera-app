@@ -6,9 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { useToast } from '@/hooks/useToast';
 import api from '@/lib/api';
 import axios from 'axios';
+import { maskPhone } from '@/lib/masks';
 
 interface UserProfile {
     id: string;
@@ -19,6 +21,7 @@ interface UserProfile {
     bio: string | null;
     cpf: string | null;
     cnpj: string | null;
+    slug: string | null;
     plan: string;
     avatar: string | null;
     createdAt: string;
@@ -32,20 +35,23 @@ interface ProfileSectionProps {
 export function ProfileSection({ profile, onUpdate }: ProfileSectionProps) {
     const [name, setName] = useState(profile.name);
     const [phone, setPhone] = useState(profile.phone || '');
+    const [slug, setSlug] = useState(profile.slug || '');
+    const [avatar, setAvatar] = useState(profile.avatar);
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
 
-    const formatPhone = (value: string) => {
-        const numbers = value.replace(/\D/g, '');
-        if (numbers.length <= 10) {
-            return numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').trim();
-        }
-        return numbers.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').trim();
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPhone(maskPhone(e.target.value));
     };
 
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const formatted = formatPhone(e.target.value);
-        setPhone(formatted);
+    const handleAvatarUpload = async (file: File) => {
+        const formData = new FormData();
+        formData.append('avatar', file);
+        const response = await api.post('/auth/avatar', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        setAvatar(response.data.avatar);
+        onUpdate({ ...profile, avatar: response.data.avatar });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -66,6 +72,7 @@ export function ProfileSection({ profile, onUpdate }: ProfileSectionProps) {
             const response = await api.put('/auth/profile', {
                 name: name.trim(),
                 phone: phone.replace(/\D/g, '') || null,
+                slug: slug.trim() || undefined,
             });
 
             onUpdate(response.data.user);
@@ -87,15 +94,6 @@ export function ProfileSection({ profile, onUpdate }: ProfileSectionProps) {
         }
     };
 
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    };
-
     return (
         <Card>
             <CardHeader>
@@ -110,12 +108,17 @@ export function ProfileSection({ profile, onUpdate }: ProfileSectionProps) {
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white text-xl font-semibold">
-                            {getInitials(name)}
-                        </div>
+                        <AvatarUpload
+                            currentAvatar={avatar}
+                            name={name}
+                            onUpload={handleAvatarUpload}
+                            size="lg"
+                            color="blue"
+                        />
                         <div>
                             <p className="text-sm font-medium text-slate-900">{name}</p>
                             <p className="text-sm text-slate-500">{profile.email}</p>
+                            <p className="text-xs text-slate-400 mt-1">Clique na foto para alterar</p>
                         </div>
                     </div>
 
@@ -163,6 +166,28 @@ export function ProfileSection({ profile, onUpdate }: ProfileSectionProps) {
                                 className="bg-slate-50"
                             />
                         </div>
+                    </div>
+
+                    {/* Link público */}
+                    <div className="space-y-2">
+                        <Label htmlFor="slug">Seu link público</Label>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-slate-500 whitespace-nowrap">
+                                {typeof window !== 'undefined' ? window.location.origin : ''}/f/
+                            </span>
+                            <Input
+                                id="slug"
+                                value={slug}
+                                onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                                placeholder="seu-slug"
+                            />
+                            <span className="text-sm text-slate-500 whitespace-nowrap">
+                                /solicitar-orcamento
+                            </span>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                            Compartilhe este link com seus clientes para receber solicitações de orçamento
+                        </p>
                     </div>
 
                     <div className="flex justify-end">

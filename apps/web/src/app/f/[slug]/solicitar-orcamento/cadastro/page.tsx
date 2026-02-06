@@ -1,5 +1,6 @@
 'use client';
 
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,8 +13,10 @@ import { clienteCadastroSchema, ClienteCadastroInput } from '@/lib/validations/s
 import apiPublic from '@/lib/api-public';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { maskPhone, maskCnpj } from '@/lib/masks';
 
-export default function CadastroPage() {
+export default function CadastroPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = use(params);
     const router = useRouter();
 
     const {
@@ -26,13 +29,23 @@ export default function CadastroPage() {
 
     const onSubmit = async (data: ClienteCadastroInput) => {
         try {
-            const response = await apiPublic.post('/solicitacoes/cliente/cadastrar', data);
+            const userId = sessionStorage.getItem('freelancerUserId');
 
-            // Salvar dados do cliente no sessionStorage
+            if (!userId) {
+                toast.error('Sessão expirada. Volte à página anterior.');
+                router.push(`/f/${slug}/solicitar-orcamento`);
+                return;
+            }
+
+            const response = await apiPublic.post('/solicitacoes/cliente/cadastrar', {
+                ...data,
+                userId,
+            });
+
             sessionStorage.setItem('cliente', JSON.stringify(response.data.cliente));
 
             toast.success('Cadastro realizado com sucesso!');
-            router.push('/solicitar-orcamento/briefing');
+            router.push(`/f/${slug}/solicitar-orcamento/briefing`);
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 toast.error(error.response?.data?.error || 'Erro ao realizar cadastro');
@@ -50,7 +63,7 @@ export default function CadastroPage() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => router.push('/solicitar-orcamento')}
+                            onClick={() => router.push(`/f/${slug}/solicitar-orcamento`)}
                         >
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
@@ -95,7 +108,10 @@ export default function CadastroPage() {
                                 <Input
                                     id="phone"
                                     placeholder="(11) 99999-9999"
-                                    {...register('phone')}
+                                    maxLength={15}
+                                    {...register('phone', {
+                                        onChange: (e) => { e.target.value = maskPhone(e.target.value); },
+                                    })}
                                 />
                             </div>
 
@@ -105,7 +121,9 @@ export default function CadastroPage() {
                                     id="cnpj"
                                     placeholder="00.000.000/0000-00"
                                     maxLength={18}
-                                    {...register('cnpj')}
+                                    {...register('cnpj', {
+                                        onChange: (e) => { e.target.value = maskCnpj(e.target.value); },
+                                    })}
                                 />
                                 {errors.cnpj && (
                                     <p className="text-sm text-red-500">{errors.cnpj.message}</p>

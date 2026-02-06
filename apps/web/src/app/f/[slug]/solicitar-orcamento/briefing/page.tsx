@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,11 +15,12 @@ import { ClientePublico } from '@/types/solicitacao';
 import apiPublic from '@/lib/api-public';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { maskCurrency, unmaskCurrency } from '@/lib/masks';
 
-export default function BriefingPage() {
+export default function BriefingPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = use(params);
     const router = useRouter();
 
-    // Lazy initialization - lê do sessionStorage apenas uma vez
     const [cliente] = useState<ClientePublico | null>(() => {
         if (typeof window === 'undefined') return null;
         const clienteData = sessionStorage.getItem('cliente');
@@ -36,13 +37,12 @@ export default function BriefingPage() {
         resolver: zodResolver(briefingSchema),
     });
 
-    // Apenas para o side effect de redirecionamento
     useEffect(() => {
         if (!cliente) {
             toast.error('Sessão expirada. Por favor, comece novamente.');
-            router.push('/solicitar-orcamento');
+            router.push(`/f/${slug}/solicitar-orcamento`);
         }
-    }, [cliente, router]);
+    }, [cliente, router, slug]);
 
     const onSubmit = async (data: BriefingInput) => {
         if (!cliente) return;
@@ -56,11 +56,11 @@ export default function BriefingPage() {
                 deadline: data.deadline || undefined,
             });
 
-            // Limpar sessionStorage
             sessionStorage.removeItem('cliente');
+            sessionStorage.removeItem('freelancerUserId');
 
             toast.success('Solicitação enviada com sucesso!');
-            router.push('/solicitar-orcamento/sucesso');
+            router.push(`/f/${slug}/solicitar-orcamento/sucesso`);
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 toast.error(error.response?.data?.error || 'Erro ao enviar solicitação');
@@ -70,7 +70,6 @@ export default function BriefingPage() {
         }
     };
 
-    // Se não tem cliente, não renderiza nada (vai redirecionar)
     if (!cliente) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
@@ -87,7 +86,7 @@ export default function BriefingPage() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => router.push('/solicitar-orcamento')}
+                            onClick={() => router.push(`/f/${slug}/solicitar-orcamento`)}
                         >
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
@@ -135,10 +134,14 @@ export default function BriefingPage() {
                                     <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                                     <Input
                                         id="budget"
-                                        type="number"
-                                        placeholder="5000"
+                                        placeholder="5.000,00"
                                         className="pl-10"
-                                        {...register('budget')}
+                                        value={watch('budget') ? maskCurrency(String(Math.round(parseFloat(watch('budget')!) * 100))) : ''}
+                                        onChange={(e) => {
+                                            const masked = maskCurrency(e.target.value);
+                                            e.target.value = masked;
+                                            setValue('budget', unmaskCurrency(masked));
+                                        }}
                                     />
                                 </div>
                                 <p className="text-xs text-slate-500">

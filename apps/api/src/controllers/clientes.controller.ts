@@ -1,4 +1,6 @@
 import { Response } from 'express';
+import fs from 'fs';
+import path from 'path';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import logger from '../config/logger';
@@ -84,7 +86,7 @@ export const getCliente = async (req: AuthRequest, res: Response) => {
 export const createCliente = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.userId!;
-        const { name, email, phone, company, cnpj, address, city, state, zipCode, notes } = req.body;
+        const { name, email, phone, company, cnpj, address, city, state, zipCode, notes, active } = req.body;
 
         if (!name || !email) {
             return res.status(400).json({
@@ -119,6 +121,7 @@ export const createCliente = async (req: AuthRequest, res: Response) => {
                 state,
                 zipCode,
                 notes,
+                active,
             },
         });
 
@@ -223,6 +226,55 @@ export const deleteCliente = async (req: AuthRequest, res: Response) => {
         logger.error({ err: error }, 'Delete cliente error');
         return res.status(500).json({
             error: 'Erro ao excluir cliente',
+        });
+    }
+};
+
+export const uploadClienteAvatar = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.userId!;
+        const { id } = req.params;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ error: 'Arquivo é obrigatório' });
+        }
+
+        const cliente = await prisma.cliente.findFirst({
+            where: { id, userId },
+            select: { avatar: true },
+        });
+
+        if (!cliente) {
+            // Cleanup uploaded file
+            fs.unlinkSync(file.path);
+            return res.status(404).json({ error: 'Cliente não encontrado' });
+        }
+
+        // Deletar avatar anterior
+        if (cliente.avatar) {
+            const oldPath = path.join(__dirname, '..', '..', cliente.avatar);
+            if (fs.existsSync(oldPath)) {
+                fs.unlinkSync(oldPath);
+            }
+        }
+
+        const avatarUrl = `/uploads/${file.filename}`;
+
+        const updated = await prisma.cliente.update({
+            where: { id },
+            data: { avatar: avatarUrl },
+            select: { id: true, avatar: true },
+        });
+
+        return res.json({
+            message: 'Avatar do cliente atualizado com sucesso',
+            avatar: updated.avatar,
+        });
+    } catch (error) {
+        logger.error({ err: error }, 'Upload cliente avatar error');
+        return res.status(500).json({
+            error: 'Erro ao atualizar avatar do cliente',
         });
     }
 };

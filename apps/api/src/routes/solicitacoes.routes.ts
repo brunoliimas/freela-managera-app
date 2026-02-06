@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
     createSolicitacao,
+    getFreelancerBySlug,
     findClienteByCnpj,
     createClientePublic,
     getSolicitacoes,
@@ -14,6 +15,7 @@ import { createSolicitacaoSchema, createClientePublicSchema } from '../validatio
 const router = Router();
 
 // Rotas PÚBLICAS (sem autenticação)
+router.get('/freelancer/:slug', getFreelancerBySlug);
 router.post('/solicitar', validate(createSolicitacaoSchema), createSolicitacao);
 router.get('/cliente/buscar-cnpj/:cnpj', findClienteByCnpj);
 router.post('/cliente/cadastrar', validate(createClientePublicSchema), createClientePublic);

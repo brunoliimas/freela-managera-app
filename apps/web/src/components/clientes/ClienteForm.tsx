@@ -10,6 +10,7 @@ import { RichTextEditorCompact } from '@/components/ui/rich-text-editor-compact'
 import { Switch } from '@/components/ui/switch';
 import { clienteSchema, ClienteInput } from '@/lib/validations/cliente';
 import { Cliente } from '@/types/cliente';
+import { maskPhone, maskCnpj, maskCep } from '@/lib/masks';
 
 interface ClienteFormProps {
     cliente?: Cliente;
@@ -80,7 +81,10 @@ export function ClienteForm({ cliente, onSubmit, isLoading }: ClienteFormProps) 
                         <Input
                             id="phone"
                             placeholder="(11) 99999-9999"
-                            {...register('phone')}
+                            maxLength={15}
+                            {...register('phone', {
+                                onChange: (e) => { e.target.value = maskPhone(e.target.value); },
+                            })}
                         />
                     </div>
 
@@ -98,7 +102,10 @@ export function ClienteForm({ cliente, onSubmit, isLoading }: ClienteFormProps) 
                         <Input
                             id="cnpj"
                             placeholder="00.000.000/0000-00"
-                            {...register('cnpj')}
+                            maxLength={18}
+                            {...register('cnpj', {
+                                onChange: (e) => { e.target.value = maskCnpj(e.target.value); },
+                            })}
                         />
                     </div>
                 </div>
@@ -142,7 +149,10 @@ export function ClienteForm({ cliente, onSubmit, isLoading }: ClienteFormProps) 
                         <Input
                             id="zipCode"
                             placeholder="00000-000"
-                            {...register('zipCode')}
+                            maxLength={9}
+                            {...register('zipCode', {
+                                onChange: (e) => { e.target.value = maskCep(e.target.value); },
+                            })}
                         />
                     </div>
                 </div>

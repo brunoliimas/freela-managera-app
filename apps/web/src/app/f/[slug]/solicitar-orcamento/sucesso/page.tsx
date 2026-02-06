@@ -1,10 +1,13 @@
 'use client';
 
+import { use } from 'react';
 import { CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function SucessoPage() {
+export default function SucessoPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = use(params);
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 p-4">
             <Card className="w-full max-w-lg text-center">
@@ -35,7 +38,7 @@ export default function SucessoPage() {
 
                     <Button
                         className="w-full"
-                        onClick={() => window.location.href = '/solicitar-orcamento'}
+                        onClick={() => window.location.href = `/f/${slug}/solicitar-orcamento`}
                     >
                         Fazer Nova Solicitação
                     </Button>

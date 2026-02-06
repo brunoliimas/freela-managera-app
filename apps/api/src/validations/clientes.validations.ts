@@ -11,4 +11,5 @@ export const createClienteSchema = z.object({
     state: z.string().optional(),
     zipCode: z.string().optional(),
     notes: z.string().optional(),
+    active: z.boolean().optional(),
 });

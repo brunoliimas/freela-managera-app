@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
 import { AuthService } from '../services/auth.service';
 import { setTokenCookie, clearTokenCookie } from '../utils/cookie';
 import { AppError } from '../utils/errors';
 import logger from '../config/logger';
+import prisma from '../config/database';
 
 export const register = async (req: Request, res: Response) => {
     try {
@@ -171,6 +174,49 @@ export const changePassword = async (req: Request, res: Response) => {
         logger.error({ err: error }, 'Change password error');
         return res.status(500).json({
             error: 'Erro ao alterar senha',
+        });
+    }
+};
+
+export const uploadAvatar = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).userId;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ error: 'Arquivo é obrigatório' });
+        }
+
+        // Buscar avatar atual para cleanup
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { avatar: true },
+        });
+
+        // Deletar avatar anterior
+        if (user?.avatar) {
+            const oldPath = path.join(__dirname, '..', '..', user.avatar);
+            if (fs.existsSync(oldPath)) {
+                fs.unlinkSync(oldPath);
+            }
+        }
+
+        const avatarUrl = `/uploads/${file.filename}`;
+
+        const updated = await prisma.user.update({
+            where: { id: userId },
+            data: { avatar: avatarUrl },
+            select: { id: true, avatar: true },
+        });
+
+        return res.json({
+            message: 'Avatar atualizado com sucesso',
+            avatar: updated.avatar,
+        });
+    } catch (error) {
+        logger.error({ err: error }, 'Upload avatar error');
+        return res.status(500).json({
+            error: 'Erro ao atualizar avatar',
         });
     }
 };

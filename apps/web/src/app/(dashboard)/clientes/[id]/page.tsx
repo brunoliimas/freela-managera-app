@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Mail, Phone, Building2, MapPin, Pencil, FileText, FolderKanban } from 'lucide-react';
+import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -71,6 +72,20 @@ export default function ClienteDetailsPage({
                     <Button variant="ghost" size="icon" onClick={() => router.push('/clientes')}>
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
+                    <AvatarUpload
+                        currentAvatar={cliente.avatar || null}
+                        name={cliente.name}
+                        onUpload={async (file) => {
+                            const formData = new FormData();
+                            formData.append('avatar', file);
+                            await api.post(`/clientes/${id}/avatar`, formData, {
+                                headers: { 'Content-Type': 'multipart/form-data' },
+                            });
+                            fetchCliente();
+                        }}
+                        size="lg"
+                        color="blue"
+                    />
                     <div>
                         <div className="flex items-center gap-3">
                             <h1 className="text-3xl font-bold text-slate-900">{cliente.name}</h1>

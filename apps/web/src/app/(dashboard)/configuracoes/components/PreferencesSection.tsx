@@ -5,10 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useTheme } from '@/hooks/useTheme';
+import { useFreelancerTheme } from '@/hooks/useTheme';
 
 export function PreferencesSection() {
-    const { theme, setTheme } = useTheme();
+    const { theme, setTheme } = useFreelancerTheme();
 
     return (
         <div className="space-y-6">

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/useToast';
 import api from '@/lib/api';
 import axios from 'axios';
+import { maskCpf, maskCnpj } from '@/lib/masks';
 
 interface UserProfile {
     id: string;
@@ -20,6 +21,7 @@ interface UserProfile {
     bio: string | null;
     cpf: string | null;
     cnpj: string | null;
+    slug: string | null;
     plan: string;
     avatar: string | null;
     createdAt: string;
@@ -38,29 +40,12 @@ export function CompanySection({ profile, onUpdate }: CompanySectionProps) {
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
 
-    const formatCpf = (value: string) => {
-        const numbers = value.replace(/\D/g, '').slice(0, 11);
-        return numbers
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    };
-
-    const formatCnpj = (value: string) => {
-        const numbers = value.replace(/\D/g, '').slice(0, 14);
-        return numbers
-            .replace(/(\d{2})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d)/, '$1/$2')
-            .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
-    };
-
     const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setCpf(formatCpf(e.target.value));
+        setCpf(maskCpf(e.target.value));
     };
 
     const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setCnpj(formatCnpj(e.target.value));
+        setCnpj(maskCnpj(e.target.value));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {

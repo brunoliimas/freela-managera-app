@@ -20,6 +20,7 @@ interface UserProfile {
     bio: string | null;
     cpf: string | null;
     cnpj: string | null;
+    slug: string | null;
     plan: string;
     avatar: string | null;
     createdAt: string;

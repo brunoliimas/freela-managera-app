@@ -7,8 +7,9 @@ import orcamentosRoutes from './orcamentos.routes';
 import projetosRoutes from './projetos.routes';
 import pagamentosRoutes from './pagamentos.routes';
 import arquivosRoutes from './arquivos.routes';
-import relatoriosRoutes from './relatorios.routes'; 
-
+import relatoriosRoutes from './relatorios.routes';
+import calendarioRoutes from './calendario.routes';
+import portalRoutes from './portal.routes';
 
 const router = Router();
 
@@ -21,5 +22,7 @@ router.use('/projetos', projetosRoutes);
 router.use('/pagamentos', pagamentosRoutes);
 router.use('/arquivos', arquivosRoutes);
 router.use('/relatorios', relatoriosRoutes);
+router.use('/calendario', calendarioRoutes);
+router.use('/portal', portalRoutes);
 
 export default router;

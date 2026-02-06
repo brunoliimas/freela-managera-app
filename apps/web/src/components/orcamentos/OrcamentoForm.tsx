@@ -20,6 +20,7 @@ import api from '@/lib/api';
 import { toast } from 'sonner';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { RichTextEditorCompact } from '../ui/rich-text-editor-compact';
+import { maskCurrency, unmaskCurrency } from '@/lib/masks';
 
 interface OrcamentoFormProps {
     orcamento?: Orcamento;
@@ -153,10 +154,13 @@ export function OrcamentoForm({ orcamento, solicitacao, onSubmit, isLoading }: O
                         <Label htmlFor="value">Valor (R$) *</Label>
                         <Input
                             id="value"
-                            type="number"
-                            step="0.01"
-                            placeholder="5000.00"
-                            {...register('value')}
+                            placeholder="5.000,00"
+                            value={watch('value') ? maskCurrency(String(Math.round(parseFloat(watch('value')) * 100))) : ''}
+                            onChange={(e) => {
+                                const masked = maskCurrency(e.target.value);
+                                e.target.value = masked;
+                                setValue('value', unmaskCurrency(masked));
+                            }}
                         />
                         {errors.value && (
                             <p className="text-sm text-red-500">{errors.value.message}</p>

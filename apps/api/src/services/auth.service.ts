@@ -5,6 +5,7 @@ import { generateToken } from '../utils/jwt';
 import { sendEmail } from '../config/email';
 import { templateRecuperacaoSenha } from '../templates/email-templates';
 import { AppError } from '../utils/errors';
+import { generateUniqueSlug } from '../utils/slugify';
 import { env } from '../config/env';
 
 const USER_SELECT = {
@@ -13,6 +14,7 @@ const USER_SELECT = {
     email: true,
     phone: true,
     company: true,
+    slug: true,
     plan: true,
     createdAt: true,
 };
@@ -56,9 +58,10 @@ export class AuthService {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const slug = await generateUniqueSlug(name);
 
         const user = await prisma.user.create({
-            data: { name, email, password: hashedPassword, phone, company },
+            data: { name, email, password: hashedPassword, phone, company, slug },
             select: USER_SELECT,
         });
 
@@ -161,7 +164,14 @@ export class AuthService {
         return user;
     }
 
-    static async updateProfile(userId: string, data: { name?: string; phone?: string; company?: string; bio?: string; cpf?: string; cnpj?: string }) {
+    static async updateProfile(userId: string, data: { name?: string; phone?: string; company?: string; bio?: string; cpf?: string; cnpj?: string; slug?: string }) {
+        if (data.slug) {
+            const existing = await prisma.user.findUnique({ where: { slug: data.slug } });
+            if (existing && existing.id !== userId) {
+                throw new AppError('Este slug já está em uso', 400);
+            }
+        }
+
         return prisma.user.update({
             where: { id: userId },
             data,
