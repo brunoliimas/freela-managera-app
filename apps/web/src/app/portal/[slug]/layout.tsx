@@ -1,26 +1,45 @@
 'use client';
 
-import { useEffect } from 'react';
+import { use, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useClientAuth } from '@/hooks/useClientAuth';
 import { PortalSidebar } from '@/components/layouts/PortalSidebar';
 import { usePortalTheme } from '@/hooks/useTheme';
 
-const publicPaths = ['/portal/login', '/portal/login/enviado', '/portal/callback'];
-
-export default function PortalLayout({ children }: { children: React.ReactNode }) {
+export default function PortalLayout({ children, params }: { children: React.ReactNode; params: Promise<{ slug: string }> }) {
+    const { slug } = use(params);
     const router = useRouter();
     const pathname = usePathname();
-    const { cliente, isHydrated } = useClientAuth();
+    const { cliente, isHydrated, isSessionExpired, logout } = useClientAuth();
+
+    const publicPaths = [
+        `/portal/${slug}/login`,
+        `/portal/${slug}/login/enviado`,
+        `/portal/${slug}/callback`,
+    ];
 
     const isPublicPath = publicPaths.some(p => pathname.startsWith(p));
     usePortalTheme();
 
     useEffect(() => {
-        if (isHydrated && !cliente && !isPublicPath) {
-            router.push('/portal/login');
+        if (!isHydrated || isPublicPath) return;
+
+        if (!cliente || isSessionExpired()) {
+            if (cliente) logout();
+            router.push(`/portal/${slug}/login`);
+            return;
         }
-    }, [cliente, router, isHydrated, isPublicPath]);
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && isSessionExpired()) {
+                logout();
+                router.push(`/portal/${slug}/login`);
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [cliente, router, isHydrated, isPublicPath, slug, isSessionExpired, logout]);
 
     // Public pages (login, enviado, callback) render without sidebar
     if (isPublicPath) {
@@ -43,7 +62,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
     return (
         <div className="flex h-screen bg-slate-50">
-            <PortalSidebar />
+            <PortalSidebar slug={slug} />
             <main className="flex-1 ml-64 overflow-y-auto">
                 <div className="container mx-auto p-8">
                     {children}

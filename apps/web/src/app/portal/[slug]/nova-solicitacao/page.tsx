@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,6 +26,7 @@ type SolicitacaoInput = z.infer<typeof solicitacaoSchema>;
 
 export default function PortalNovaSolicitacaoPage() {
     const router = useRouter();
+    const { slug } = useParams<{ slug: string }>();
 
     const {
         register,
@@ -49,7 +50,7 @@ export default function PortalNovaSolicitacaoPage() {
             toast.success('Solicitação enviada!', {
                 description: 'Entraremos em contato em breve.',
             });
-            router.push('/portal');
+            router.push(`/portal/${slug}`);
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 toast.error(error.response?.data?.error || 'Erro ao enviar solicitação');

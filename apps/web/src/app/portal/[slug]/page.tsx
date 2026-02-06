@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +65,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function PortalDashboardPage() {
+    const { slug } = useParams<{ slug: string }>();
     const { cliente } = useClientAuth();
     const [projetos, setProjetos] = useState<ProjetoResumo[]>([]);
     const [pagamentos, setPagamentos] = useState<PagamentoResumo[]>([]);
@@ -163,7 +165,7 @@ export default function PortalDashboardPage() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Projetos em Andamento</CardTitle>
-                    <Link href="/portal/projetos" className="text-sm text-emerald-600 hover:underline flex items-center gap-1">
+                    <Link href={`/portal/${slug}/projetos`} className="text-sm text-emerald-600 hover:underline flex items-center gap-1">
                         Ver todos <ArrowRight size={14} />
                     </Link>
                 </CardHeader>
@@ -173,7 +175,7 @@ export default function PortalDashboardPage() {
                     ) : (
                         <div className="space-y-4">
                             {projetosAtivos.slice(0, 5).map((p) => (
-                                <Link key={p.id} href={`/portal/projetos/${p.id}`} className="block">
+                                <Link key={p.id} href={`/portal/${slug}/projetos/${p.id}`} className="block">
                                     <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-slate-50 transition-colors">
                                         <div>
                                             <p className="font-medium">{p.number} - {p.title}</p>
@@ -201,7 +203,7 @@ export default function PortalDashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Próximos Pagamentos</CardTitle>
-                        <Link href="/portal/pagamentos" className="text-sm text-emerald-600 hover:underline flex items-center gap-1">
+                        <Link href={`/portal/${slug}/pagamentos`} className="text-sm text-emerald-600 hover:underline flex items-center gap-1">
                             Ver todos <ArrowRight size={14} />
                         </Link>
                     </CardHeader>

@@ -20,11 +20,18 @@ export const requestLogin = async (req: Request, res: Response) => {
 
         const cliente = await prisma.cliente.findFirst({
             where: { email, active: true },
+            include: { user: { select: { slug: true } } },
         });
 
         // Retorna sucesso genérico por segurança (não revelar se email existe)
         if (!cliente) {
             return res.json({ message: 'Se o email estiver cadastrado, você receberá um link de acesso.' });
+        }
+
+        const slug = cliente.user?.slug;
+        if (!slug) {
+            logger.error({ clienteId: cliente.id }, 'Freelancer sem slug configurado');
+            return res.status(500).json({ error: 'Erro na configuração do portal' });
         }
 
         const token = crypto.randomBytes(32).toString('hex');
@@ -39,7 +46,7 @@ export const requestLogin = async (req: Request, res: Response) => {
             },
         });
 
-        const portalUrl = `${env.FRONTEND_URL}/portal/callback?token=${token}`;
+        const portalUrl = `${env.FRONTEND_URL}/portal/${slug}/callback?token=${token}`;
 
         await sendEmail({
             to: cliente.email,
@@ -80,6 +87,7 @@ export const verifyToken = async (req: Request, res: Response) => {
                 portalToken: tokenHash,
                 portalTokenExpires: { gt: new Date() },
             },
+            include: { user: { select: { slug: true } } },
         });
 
         if (!cliente) {
@@ -108,6 +116,7 @@ export const verifyToken = async (req: Request, res: Response) => {
                 company: cliente.company,
                 phone: cliente.phone,
             },
+            slug: cliente.user?.slug,
         });
     } catch (error) {
         logger.error({ err: error }, 'Erro ao verificar token do portal');
@@ -134,6 +143,7 @@ export const getProfile = async (req: ClientAuthRequest, res: Response) => {
                 company: true,
                 cnpj: true,
                 avatar: true,
+                user: { select: { slug: true } },
             },
         });
 
@@ -141,7 +151,8 @@ export const getProfile = async (req: ClientAuthRequest, res: Response) => {
             return res.status(404).json({ error: 'Cliente não encontrado' });
         }
 
-        return res.json(cliente);
+        const { user, ...clienteData } = cliente;
+        return res.json({ ...clienteData, slug: user?.slug });
     } catch (error) {
         logger.error({ err: error }, 'Erro ao buscar perfil do cliente');
         return res.status(500).json({ error: 'Erro ao buscar perfil' });

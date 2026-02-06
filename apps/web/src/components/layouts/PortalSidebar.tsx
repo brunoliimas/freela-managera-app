@@ -19,37 +19,21 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
-const menuItems = [
-    {
-        title: 'Início',
-        href: '/portal',
-        icon: LayoutDashboard,
-    },
-    {
-        title: 'Projetos',
-        href: '/portal/projetos',
-        icon: FolderKanban,
-    },
-    {
-        title: 'Orçamentos',
-        href: '/portal/orcamentos',
-        icon: FileText,
-    },
-    {
-        title: 'Pagamentos',
-        href: '/portal/pagamentos',
-        icon: CreditCard,
-    },
-    {
-        title: 'Nova Solicitação',
-        href: '/portal/nova-solicitacao',
-        icon: PlusCircle,
-    },
-];
+interface PortalSidebarProps {
+    slug: string;
+}
 
-export function PortalSidebar() {
+export function PortalSidebar({ slug }: PortalSidebarProps) {
     const pathname = usePathname();
     const { cliente, logout } = useClientAuth();
+
+    const menuItems = [
+        { title: 'Início', href: `/portal/${slug}`, icon: LayoutDashboard },
+        { title: 'Projetos', href: `/portal/${slug}/projetos`, icon: FolderKanban },
+        { title: 'Orçamentos', href: `/portal/${slug}/orcamentos`, icon: FileText },
+        { title: 'Pagamentos', href: `/portal/${slug}/pagamentos`, icon: CreditCard },
+        { title: 'Nova Solicitação', href: `/portal/${slug}/nova-solicitacao`, icon: PlusCircle },
+    ];
     const { theme, setTheme } = usePortalThemeStore();
 
     const toggleTheme = () => {
@@ -81,7 +65,7 @@ export function PortalSidebar() {
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href ||
-                        (item.href !== '/portal' && pathname.startsWith(item.href));
+                        (item.href !== `/portal/${slug}` && pathname.startsWith(item.href));
 
                     return (
                         <Link

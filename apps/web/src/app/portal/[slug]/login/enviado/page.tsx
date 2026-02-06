@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Mail, ArrowLeft } from 'lucide-react';
 
 export default function PortalLoginEnviadoPage() {
+    const { slug } = useParams<{ slug: string }>();
     return (
         <div className="flex items-center justify-center min-h-screen bg-emerald-50">
             <div className="w-full max-w-md px-4">
@@ -30,7 +32,7 @@ export default function PortalLoginEnviadoPage() {
                             verifique sua caixa de spam.
                         </p>
 
-                        <Link href="/portal/login">
+                        <Link href={`/portal/${slug}/login`}>
                             <Button variant="outline" className="mt-4">
                                 <ArrowLeft className="mr-2 h-4 w-4" />
                                 Voltar ao login

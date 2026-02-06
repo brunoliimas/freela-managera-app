@@ -11,8 +11,11 @@ apiPortal.interceptors.response.use(
         if (error.response?.status === 401) {
             if (typeof window !== 'undefined') {
                 const currentPath = window.location.pathname;
-                if (currentPath !== '/portal/login') {
-                    window.location.href = '/portal/login';
+                const match = currentPath.match(/^\/portal\/([^/]+)/);
+                const slug = match?.[1];
+                const loginPath = slug ? `/portal/${slug}/login` : '/portal';
+                if (currentPath !== loginPath) {
+                    window.location.href = loginPath;
                 }
             }
         }

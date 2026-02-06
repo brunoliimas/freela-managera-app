@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import { Mail } from 'lucide-react';
 
 export default function PortalLoginPage() {
     const router = useRouter();
+    const { slug } = useParams<{ slug: string }>();
     const { requestLogin, isLoading } = useClientAuth();
     const [email, setEmail] = useState('');
 
@@ -25,7 +26,7 @@ export default function PortalLoginPage() {
 
         try {
             await requestLogin(email);
-            router.push('/portal/login/enviado');
+            router.push(`/portal/${slug}/login/enviado`);
         } catch (error: unknown) {
             let message = 'Erro ao solicitar acesso';
             if (error instanceof Error) {

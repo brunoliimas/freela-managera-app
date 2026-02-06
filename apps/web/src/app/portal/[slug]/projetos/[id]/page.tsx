@@ -125,7 +125,7 @@ export default function PortalProjetoDetalhePage() {
     if (!projeto) {
         return (
             <div className="space-y-6">
-                <Link href="/portal/projetos">
+                <Link href={`/portal/${params.slug}/projetos`}>
                     <Button variant="ghost" size="sm">
                         <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
                     </Button>
@@ -151,7 +151,7 @@ export default function PortalProjetoDetalhePage() {
             {/* Header */}
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
-                    <Link href="/portal/projetos">
+                    <Link href={`/portal/${params.slug}/projetos`}>
                         <ArrowLeft className="h-4 w-4" />
                     </Link>
                 </Button>

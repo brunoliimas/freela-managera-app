@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useClientAuth } from '@/hooks/useClientAuth';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import Link from 'next/link';
 export default function PortalCallbackPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { slug } = useParams<{ slug: string }>();
     const { verifyToken } = useClientAuth();
     const [error, setError] = useState<string | null>(null);
     const hasVerified = useRef(false);
@@ -33,7 +34,7 @@ export default function PortalCallbackPage() {
                 toast.success('Acesso confirmado!', {
                     description: 'Bem-vindo ao portal.',
                 });
-                router.push('/portal');
+                router.push(`/portal/${slug}`);
             } catch (err: unknown) {
                 let message = 'Link inválido ou expirado';
                 if (err instanceof Error) {
@@ -44,7 +45,7 @@ export default function PortalCallbackPage() {
         };
 
         verify();
-    }, [searchParams, verifyToken, router]);
+    }, [searchParams, verifyToken, router, slug]);
 
     if (error) {
         return (
@@ -59,7 +60,7 @@ export default function PortalCallbackPage() {
                         </CardHeader>
                         <CardContent className="text-center space-y-4">
                             <p className="text-slate-600">{error}</p>
-                            <Link href="/portal/login">
+                            <Link href={`/portal/${slug}/login`}>
                                 <Button className="bg-emerald-600 hover:bg-emerald-700">
                                     Solicitar novo link
                                 </Button>

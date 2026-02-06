@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -56,6 +56,7 @@ const statusLabels: Record<string, string> = {
 
 export default function PortalProjetosPage() {
     const router = useRouter();
+    const { slug } = useParams<{ slug: string }>();
     const [projetos, setProjetos] = useState<Projeto[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -165,7 +166,7 @@ export default function PortalProjetosPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => router.push(`/portal/projetos/${projeto.id}`)}
+                                                onClick={() => router.push(`/portal/${slug}/projetos/${projeto.id}`)}
                                                 title="Ver detalhes"
                                             >
                                                 <Eye className="h-4 w-4" />

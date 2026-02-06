@@ -14,8 +14,12 @@ interface Cliente {
     avatar?: string;
 }
 
+const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
+
 interface ClientAuthState {
     cliente: Cliente | null;
+    slug: string | null;
+    loginAt: number | null;
     isLoading: boolean;
     isHydrated: boolean;
     requestLogin: (email: string) => Promise<void>;
@@ -23,12 +27,15 @@ interface ClientAuthState {
     logout: () => Promise<void>;
     setCliente: (cliente: Cliente) => void;
     setHydrated: () => void;
+    isSessionExpired: () => boolean;
 }
 
 export const useClientAuth = create<ClientAuthState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             cliente: null,
+            slug: null,
+            loginAt: null,
             isLoading: false,
             isHydrated: false,
 
@@ -52,8 +59,8 @@ export const useClientAuth = create<ClientAuthState>()(
                 set({ isLoading: true });
                 try {
                     const response = await apiPortal.post('/verify-token', { token });
-                    const { cliente } = response.data;
-                    set({ cliente, isLoading: false });
+                    const { cliente, slug } = response.data;
+                    set({ cliente, slug, loginAt: Date.now(), isLoading: false });
                 } catch (error) {
                     set({ isLoading: false });
                     if (axios.isAxiosError(error)) {
@@ -69,15 +76,21 @@ export const useClientAuth = create<ClientAuthState>()(
                 } catch {
                     // Limpar estado local mesmo se a chamada falhar
                 }
-                set({ cliente: null });
+                set({ cliente: null, slug: null, loginAt: null });
             },
 
             setCliente: (cliente: Cliente) => set({ cliente }),
+
+            isSessionExpired: () => {
+                const { loginAt } = get();
+                if (!loginAt) return true;
+                return Date.now() - loginAt > SESSION_DURATION_MS;
+            },
         }),
         {
             name: 'client-auth-storage',
             storage: createJSONStorage(() => localStorage),
-            partialize: (state) => ({ cliente: state.cliente }),
+            partialize: (state) => ({ cliente: state.cliente, slug: state.slug, loginAt: state.loginAt }),
             onRehydrateStorage: () => (state) => {
                 state?.setHydrated();
             },
