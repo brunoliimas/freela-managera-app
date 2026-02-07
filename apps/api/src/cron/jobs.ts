@@ -15,5 +15,17 @@ export function iniciarCronJobs() {
         await NotificacaoService.verificarPagamentosVencidos();
     });
 
+    // Verificar pagamentos próximos (cliente) - Todo dia às 9:30h
+    cron.schedule('30 9 * * *', async () => {
+        logger.info('Executando verificação de pagamentos próximos (cliente)');
+        await NotificacaoService.verificarPagamentosProximosCliente();
+    });
+
+    // Verificar pagamentos vencidos (cliente) - Todo dia às 10:30h
+    cron.schedule('30 10 * * *', async () => {
+        logger.info('Executando verificação de pagamentos vencidos (cliente)');
+        await NotificacaoService.verificarPagamentosVencidosCliente();
+    });
+
     logger.info('Cron jobs iniciados');
 }

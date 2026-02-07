@@ -42,11 +42,12 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relações
-  clientes   Cliente[]
-  orcamentos Orcamento[]
-  projetos   Projeto[]
-  pagamentos Pagamento[]
-  templates  Template[]
+  clientes     Cliente[]
+  orcamentos   Orcamento[]
+  projetos     Projeto[]
+  pagamentos   Pagamento[]
+  templates    Template[]
+  notificacoes Notificacao[]
 
   @@map("users")
 }
@@ -398,4 +399,39 @@ enum solicitacaoStatus {
   ANALISANDO // Você está analisando
   ORCAMENTO_ENVIADO // Você já criou e enviou o orçamento
   ARQUIVADA // Solicitação arquivada
+}
+
+// ============================================
+// NOTIFICAÇÕES IN-APP
+// ============================================
+
+model Notificacao {
+  id      String          @id @default(cuid())
+  type    NotificacaoType
+  title   String
+  message String
+  link    String?
+  read    Boolean         @default(false)
+  readAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@map("notificacoes")
+}
+
+enum NotificacaoType {
+  ORCAMENTO_APROVADO
+  ORCAMENTO_RECUSADO
+  PROJETO_CRIADO
+  PAGAMENTO_CONFIRMADO
+  PAGAMENTO_LEMBRETE
+  PAGAMENTO_VENCIDO
+  MILESTONE_CONCLUIDO
+  ARQUIVO_DISPONIVEL
+  SOLICITACAO_RECEBIDA
 }

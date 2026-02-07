@@ -6,6 +6,12 @@ jest.mock('../../config/logger', () => ({
     default: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
 }));
 
+jest.mock('../../services/notificacao.service', () => ({
+    NotificacaoService: {
+        notificarNovoArquivo: jest.fn().mockResolvedValue(undefined),
+    },
+}));
+
 jest.mock('fs', () => ({
     unlinkSync: jest.fn(),
     existsSync: jest.fn(),

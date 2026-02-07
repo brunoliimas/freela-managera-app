@@ -261,7 +261,7 @@ export function templateOrcamentoCliente(data: {
     const content = `
     <h2>📄 Orçamento - ${data.orcamentoNumero}</h2>
     <p>Olá! Segue o orçamento solicitado:</p>
-    
+
     <div class="info-box">
       <h3>${data.titulo}</h3>
       <!-- ✅ Renderiza HTML diretamente -->
@@ -270,6 +270,211 @@ export function templateOrcamentoCliente(data: {
       </div>
       <p><strong>Valor:</strong> ${data.valor}</p>
     </div>
+  `;
+
+    return getEmailLayout(content);
+}
+
+// ============================================
+// TEMPLATES PARA O CLIENTE
+// ============================================
+
+// Template: Lembrete de pagamento (para cliente)
+export function templateLembretePagamentoCliente(data: {
+    clienteNome: string;
+    descricao: string;
+    valor: string;
+    vencimento: string;
+    diasRestantes: number;
+    projetoTitulo: string;
+    empresaNome: string;
+    portalUrl: string;
+}): string {
+    const content = `
+    <h2>⏰ Lembrete de Pagamento</h2>
+    <p>Olá, <strong>${data.clienteNome}</strong>!</p>
+    <p>Você tem um pagamento próximo do vencimento.</p>
+
+    <div class="info-box">
+      <h3>${data.descricao}</h3>
+      <p><strong>Projeto:</strong> ${data.projetoTitulo}</p>
+      <p><strong>Valor:</strong> ${data.valor}</p>
+      <p><strong>Vence em:</strong> ${data.diasRestantes} dia(s) - ${data.vencimento}</p>
+    </div>
+
+    <a href="${data.portalUrl}" class="button">
+      Acessar Portal
+    </a>
+
+    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+      — ${data.empresaNome}
+    </p>
+  `;
+
+    return getEmailLayout(content);
+}
+
+// Template: Pagamento vencido (para cliente)
+export function templatePagamentoVencidoCliente(data: {
+    clienteNome: string;
+    descricao: string;
+    valor: string;
+    vencimento: string;
+    diasAtraso: number;
+    projetoTitulo: string;
+    empresaNome: string;
+    portalUrl: string;
+}): string {
+    const content = `
+    <h2>🚨 Pagamento em Atraso</h2>
+    <p>Olá, <strong>${data.clienteNome}</strong>!</p>
+    <p>Identificamos um pagamento em atraso.</p>
+
+    <div class="alert-box">
+      <h3>${data.descricao}</h3>
+      <p><strong>Projeto:</strong> ${data.projetoTitulo}</p>
+      <p><strong>Valor:</strong> ${data.valor}</p>
+      <p><strong>Vencimento:</strong> ${data.vencimento}</p>
+      <p><strong>Atraso:</strong> ${data.diasAtraso} dia(s)</p>
+    </div>
+
+    <p>Por favor, regularize o pagamento o mais breve possível.</p>
+
+    <a href="${data.portalUrl}" class="button">
+      Acessar Portal
+    </a>
+
+    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+      — ${data.empresaNome}
+    </p>
+  `;
+
+    return getEmailLayout(content);
+}
+
+// Template: Pagamento confirmado (para cliente)
+export function templatePagamentoConfirmadoCliente(data: {
+    clienteNome: string;
+    descricao: string;
+    valor: string;
+    projetoTitulo: string;
+    empresaNome: string;
+    portalUrl: string;
+}): string {
+    const content = `
+    <h2>✅ Pagamento Confirmado</h2>
+    <p>Olá, <strong>${data.clienteNome}</strong>!</p>
+    <p>Seu pagamento foi confirmado com sucesso.</p>
+
+    <div class="info-box">
+      <h3>${data.descricao}</h3>
+      <p><strong>Projeto:</strong> ${data.projetoTitulo}</p>
+      <p><strong>Valor:</strong> ${data.valor}</p>
+    </div>
+
+    <p>Obrigado pelo pagamento!</p>
+
+    <a href="${data.portalUrl}" class="button">
+      Acessar Portal
+    </a>
+
+    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+      — ${data.empresaNome}
+    </p>
+  `;
+
+    return getEmailLayout(content);
+}
+
+// Template: Projeto iniciado (para cliente)
+export function templateProjetoIniciadoCliente(data: {
+    clienteNome: string;
+    projetoNumero: string;
+    projetoTitulo: string;
+    empresaNome: string;
+    portalUrl: string;
+}): string {
+    const content = `
+    <h2>🚀 Projeto Iniciado!</h2>
+    <p>Olá, <strong>${data.clienteNome}</strong>!</p>
+    <p>Seu projeto foi criado e está em andamento.</p>
+
+    <div class="info-box">
+      <h3>${data.projetoNumero} - ${data.projetoTitulo}</h3>
+      <p>Você pode acompanhar o progresso pelo portal do cliente.</p>
+    </div>
+
+    <a href="${data.portalUrl}" class="button">
+      Acompanhar Projeto
+    </a>
+
+    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+      — ${data.empresaNome}
+    </p>
+  `;
+
+    return getEmailLayout(content);
+}
+
+// Template: Milestone concluído (para cliente)
+export function templateMilestoneConcluidoCliente(data: {
+    clienteNome: string;
+    milestoneTitulo: string;
+    projetoTitulo: string;
+    progresso: number;
+    empresaNome: string;
+    portalUrl: string;
+}): string {
+    const content = `
+    <h2>🎯 Etapa Concluída!</h2>
+    <p>Olá, <strong>${data.clienteNome}</strong>!</p>
+    <p>Uma etapa do seu projeto foi concluída.</p>
+
+    <div class="info-box">
+      <h3>${data.milestoneTitulo}</h3>
+      <p><strong>Projeto:</strong> ${data.projetoTitulo}</p>
+      <p><strong>Progresso geral:</strong> ${data.progresso}%</p>
+    </div>
+
+    <a href="${data.portalUrl}" class="button">
+      Ver Progresso
+    </a>
+
+    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+      — ${data.empresaNome}
+    </p>
+  `;
+
+    return getEmailLayout(content);
+}
+
+// Template: Novo arquivo disponível (para cliente)
+export function templateNovoArquivoCliente(data: {
+    clienteNome: string;
+    arquivoNome: string;
+    projetoTitulo: string;
+    empresaNome: string;
+    portalUrl: string;
+}): string {
+    const content = `
+    <h2>📎 Novo Arquivo Disponível</h2>
+    <p>Olá, <strong>${data.clienteNome}</strong>!</p>
+    <p>Um novo arquivo foi adicionado ao seu projeto.</p>
+
+    <div class="info-box">
+      <p><strong>Arquivo:</strong> ${data.arquivoNome}</p>
+      <p><strong>Projeto:</strong> ${data.projetoTitulo}</p>
+    </div>
+
+    <p>Acesse o portal para fazer o download.</p>
+
+    <a href="${data.portalUrl}" class="button">
+      Ver Arquivo
+    </a>
+
+    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+      — ${data.empresaNome}
+    </p>
   `;
 
     return getEmailLayout(content);

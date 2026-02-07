@@ -2,6 +2,7 @@ import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import logger from '../config/logger';
+import { NotificacaoService } from '../services/notificacao.service';
 
 export const getMilestones = async (req: AuthRequest, res: Response) => {
     try {
@@ -143,6 +144,11 @@ export const updateMilestone = async (req: AuthRequest, res: Response) => {
 
             return { updated };
         });
+
+        // Notificar se milestone foi marcado como concluído
+        if (completed && !milestone.completedAt) {
+            NotificacaoService.notificarMilestoneConcluido(id, projetoId).catch(() => {});
+        }
 
         return res.json({
             message: 'Milestone atualizado com sucesso',

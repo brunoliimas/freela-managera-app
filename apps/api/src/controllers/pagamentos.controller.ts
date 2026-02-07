@@ -2,6 +2,7 @@ import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import logger from '../config/logger';
+import { NotificacaoService } from '../services/notificacao.service';
 
 export const getPagamentos = async (req: AuthRequest, res: Response) => {
     try {
@@ -285,6 +286,9 @@ export const marcarComoPago = async (req: AuthRequest, res: Response) => {
                 receipt,
             },
         });
+
+        // Notificar cliente e freela
+        NotificacaoService.notificarPagamentoConfirmado(id).catch(() => {});
 
         return res.json({
             message: 'Pagamento marcado como pago',

@@ -1,6 +1,12 @@
 import { Response } from 'express';
 import { AuthRequest } from '../../middlewares/auth.middleware';
 
+jest.mock('../../services/notificacao.service', () => ({
+    NotificacaoService: {
+        notificarPagamentoConfirmado: jest.fn().mockResolvedValue(undefined),
+    },
+}));
+
 // Mocks
 const mockPrismaFindMany = jest.fn();
 const mockPrismaFindFirst = jest.fn();

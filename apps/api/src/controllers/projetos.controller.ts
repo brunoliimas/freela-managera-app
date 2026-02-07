@@ -2,6 +2,7 @@ import { Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import logger from '../config/logger';
+import { NotificacaoService } from '../services/notificacao.service';
 
 export const getProjetos = async (req: AuthRequest, res: Response) => {
     try {
@@ -140,6 +141,9 @@ export const createProjeto = async (req: AuthRequest, res: Response) => {
             },
         });
 
+        // Notificar cliente e freela
+        NotificacaoService.notificarProjetoIniciado(projeto.id).catch(() => {});
+
         return res.status(201).json({
             message: 'Projeto criado com sucesso',
             projeto,
@@ -230,6 +234,9 @@ export const createProjetoFromOrcamento = async (req: AuthRequest, res: Response
                 },
             });
         });
+
+        // Notificar cliente e freela
+        NotificacaoService.notificarProjetoIniciado(projeto.id).catch(() => {});
 
         return res.status(201).json({
             message: 'Projeto criado a partir do orçamento com sucesso',

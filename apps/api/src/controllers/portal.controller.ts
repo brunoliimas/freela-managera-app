@@ -7,6 +7,7 @@ import { sendEmail } from '../config/email';
 import { ClientAuthRequest } from '../middlewares/clientAuth.middleware';
 import { env } from '../config/env';
 import logger from '../config/logger';
+import { NotificacaoService } from '../services/notificacao.service';
 
 // ==================== AUTH ====================
 
@@ -273,6 +274,7 @@ export const responderOrcamento = async (req: ClientAuthRequest, res: Response) 
 
         const orcamento = await prisma.orcamento.findFirst({
             where: { id, clienteId: req.clienteId! },
+            include: { projeto: true },
         });
 
         if (!orcamento) {
@@ -291,9 +293,54 @@ export const responderOrcamento = async (req: ClientAuthRequest, res: Response) 
             },
         });
 
+        let projeto = null;
+
+        // Auto-criar projeto quando aprovado
+        if (acao === 'APROVADO' && !orcamento.projeto) {
+            projeto = await prisma.$transaction(async (tx) => {
+                const lastProjeto = await tx.projeto.findFirst({
+                    where: { userId: orcamento.userId },
+                    orderBy: { createdAt: 'desc' },
+                });
+
+                let nextNumber = 1;
+                if (lastProjeto?.number) {
+                    const lastNumber = parseInt(lastProjeto.number.split('-')[1]);
+                    nextNumber = lastNumber + 1;
+                }
+
+                const number = `PRJ-${nextNumber.toString().padStart(3, '0')}`;
+
+                return tx.projeto.create({
+                    data: {
+                        userId: orcamento.userId,
+                        clienteId: orcamento.clienteId,
+                        number,
+                        title: orcamento.title,
+                        description: orcamento.description,
+                        value: orcamento.value,
+                        startDate: new Date(),
+                        endDate: orcamento.estimatedDays
+                            ? new Date(Date.now() + orcamento.estimatedDays * 24 * 60 * 60 * 1000)
+                            : null,
+                        orcamentoId: orcamento.id,
+                    },
+                });
+            });
+
+            // Notificações async
+            NotificacaoService.notificarOrcamentoAprovado(orcamento.id).catch(() => {});
+            NotificacaoService.notificarProjetoIniciado(projeto.id).catch(() => {});
+        } else if (acao === 'APROVADO') {
+            NotificacaoService.notificarOrcamentoAprovado(orcamento.id).catch(() => {});
+        } else {
+            NotificacaoService.notificarOrcamentoRecusado(orcamento.id).catch(() => {});
+        }
+
         return res.json({
             message: acao === 'APROVADO' ? 'Orçamento aprovado com sucesso' : 'Orçamento recusado',
             orcamento: updated,
+            projeto,
         });
     } catch (error) {
         logger.error({ err: error }, 'Erro ao responder orçamento do portal');

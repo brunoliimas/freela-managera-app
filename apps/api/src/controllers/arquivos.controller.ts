@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { NotificacaoService } from '../services/notificacao.service';
 import logger from '../config/logger';
 
 export const uploadArquivo = async (req: AuthRequest, res: Response) => {
@@ -48,6 +49,9 @@ export const uploadArquivo = async (req: AuthRequest, res: Response) => {
                 type: file.mimetype,
             },
         });
+
+        // Notificar cliente e freela
+        NotificacaoService.notificarNovoArquivo(arquivo.id).catch(() => {});
 
         return res.status(201).json({
             message: 'Arquivo enviado com sucesso',

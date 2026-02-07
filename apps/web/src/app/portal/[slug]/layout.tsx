@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useClientAuth } from '@/hooks/useClientAuth';
 import { PortalSidebar } from '@/components/layouts/PortalSidebar';
 import { usePortalTheme } from '@/hooks/useTheme';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export default function PortalLayout({ children, params }: { children: React.ReactNode; params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
@@ -63,11 +64,16 @@ export default function PortalLayout({ children, params }: { children: React.Rea
     return (
         <div className="flex h-screen bg-slate-50">
             <PortalSidebar slug={slug} />
-            <main className="flex-1 ml-64 overflow-y-auto">
-                <div className="container mx-auto p-8">
-                    {children}
-                </div>
-            </main>
+            <div className="flex-1 ml-64 flex flex-col">
+                <header className="h-14 border-b border-slate-200 bg-white flex items-center px-6 shrink-0">
+                    <Breadcrumb homeLabel="Início" homeHref={`/portal/${slug}`} portalSlug={slug} />
+                </header>
+                <main className="flex-1 overflow-y-auto">
+                    <div className="container mx-auto p-8">
+                        {children}
+                    </div>
+                </main>
+            </div>
         </div>
     );
 }

@@ -9,6 +9,7 @@ import pagamentosRoutes from './pagamentos.routes';
 import arquivosRoutes from './arquivos.routes';
 import relatoriosRoutes from './relatorios.routes';
 import calendarioRoutes from './calendario.routes';
+import notificacoesRoutes from './notificacoes.routes';
 import portalRoutes from './portal.routes';
 
 const router = Router();
@@ -23,6 +24,7 @@ router.use('/pagamentos', pagamentosRoutes);
 router.use('/arquivos', arquivosRoutes);
 router.use('/relatorios', relatoriosRoutes);
 router.use('/calendario', calendarioRoutes);
+router.use('/notificacoes', notificacoesRoutes);
 router.use('/portal', portalRoutes);
 
 export default router;

@@ -6,6 +6,12 @@ jest.mock('../../config/logger', () => ({
     default: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
 }));
 
+jest.mock('../../services/notificacao.service', () => ({
+    NotificacaoService: {
+        notificarProjetoIniciado: jest.fn().mockResolvedValue(undefined),
+    },
+}));
+
 const mockPrismaProjetoFindMany = jest.fn();
 const mockPrismaProjetoFindFirst = jest.fn();
 const mockPrismaProjetoCreate = jest.fn();
