@@ -9,8 +9,14 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/useToast';
 import api from '@/lib/api';
 import axios from 'axios';
+import { TwoFactorSection } from './TwoFactorSection';
 
-export function SecuritySection() {
+interface SecuritySectionProps {
+    twoFactorEnabled: boolean;
+    onUpdate: () => void;
+}
+
+export function SecuritySection({ twoFactorEnabled, onUpdate }: SecuritySectionProps) {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -80,102 +86,109 @@ export function SecuritySection() {
     };
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    Segurança
-                </CardTitle>
-                <CardDescription>
-                    Gerencie a segurança da sua conta
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="currentPassword">Senha atual</Label>
-                            <div className="relative">
-                                <Input
-                                    id="currentPassword"
-                                    type={showCurrentPassword ? 'text' : 'password'}
-                                    value={currentPassword}
-                                    onChange={(e) => setCurrentPassword(e.target.value)}
-                                    placeholder="Digite sua senha atual"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
-                                >
-                                    {showCurrentPassword ? (
-                                        <EyeOff className="h-4 w-4" />
-                                    ) : (
-                                        <Eye className="h-4 w-4" />
-                                    )}
-                                </button>
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Alterar Senha
+                    </CardTitle>
+                    <CardDescription>
+                        Atualize a senha da sua conta
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="currentPassword">Senha atual</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="currentPassword"
+                                        type={showCurrentPassword ? 'text' : 'password'}
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        placeholder="Digite sua senha atual"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                                    >
+                                        {showCurrentPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="newPassword">Nova senha</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="newPassword"
+                                        type={showNewPassword ? 'text' : 'password'}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        placeholder="Digite a nova senha"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                                    >
+                                        {showNewPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
+                                    </button>
+                                </div>
+                                <p className="text-xs text-slate-500">
+                                    Mínimo de 6 caracteres
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="confirmPassword"
+                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        placeholder="Confirme a nova senha"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                                    >
+                                        {showConfirmPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="newPassword">Nova senha</Label>
-                            <div className="relative">
-                                <Input
-                                    id="newPassword"
-                                    type={showNewPassword ? 'text' : 'password'}
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    placeholder="Digite a nova senha"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowNewPassword(!showNewPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
-                                >
-                                    {showNewPassword ? (
-                                        <EyeOff className="h-4 w-4" />
-                                    ) : (
-                                        <Eye className="h-4 w-4" />
-                                    )}
-                                </button>
-                            </div>
-                            <p className="text-xs text-slate-500">
-                                Mínimo de 6 caracteres
-                            </p>
+                        <div className="flex justify-end">
+                            <Button type="submit" disabled={isSaving}>
+                                {isSaving ? 'Alterando...' : 'Alterar senha'}
+                            </Button>
                         </div>
+                    </form>
+                </CardContent>
+            </Card>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
-                            <div className="relative">
-                                <Input
-                                    id="confirmPassword"
-                                    type={showConfirmPassword ? 'text' : 'password'}
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Confirme a nova senha"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
-                                >
-                                    {showConfirmPassword ? (
-                                        <EyeOff className="h-4 w-4" />
-                                    ) : (
-                                        <Eye className="h-4 w-4" />
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                        <Button type="submit" disabled={isSaving}>
-                            {isSaving ? 'Alterando...' : 'Alterar senha'}
-                        </Button>
-                    </div>
-                </form>
-            </CardContent>
-        </Card>
+            <TwoFactorSection
+                twoFactorEnabled={twoFactorEnabled}
+                onUpdate={onUpdate}
+            />
+        </div>
     );
 }

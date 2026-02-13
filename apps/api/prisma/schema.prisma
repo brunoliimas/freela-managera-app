@@ -33,6 +33,11 @@ model User {
   resetPasswordToken   String?
   resetPasswordExpires DateTime?
 
+  // Two-Factor Authentication (2FA)
+  twoFactorEnabled       Boolean  @default(false)
+  twoFactorSecret        String?
+  twoFactorRecoveryCodes String[] @default([])
+
   // Plano e assinatura
   plan                 Plan      @default(FREE)
   stripeCustomerId     String?   @unique

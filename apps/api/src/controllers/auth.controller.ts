@@ -43,12 +43,21 @@ export const login = async (req: Request, res: Response) => {
             });
         }
 
-        const { user, token } = await AuthService.login(req.body.email, req.body.password);
-        setTokenCookie(res, token);
+        const result = await AuthService.login(req.body.email, req.body.password);
+
+        if (result.requires2FA) {
+            return res.json({
+                requires2FA: true,
+                tempToken: result.tempToken,
+                message: 'Verificação 2FA necessária',
+            });
+        }
+
+        setTokenCookie(res, result.token!);
 
         return res.json({
             message: 'Login realizado com sucesso',
-            user,
+            user: result.user,
         });
     } catch (error) {
         if (error instanceof AppError) {

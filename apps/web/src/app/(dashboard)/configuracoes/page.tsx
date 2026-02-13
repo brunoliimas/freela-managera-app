@@ -27,6 +27,7 @@ interface UserProfile {
     plan: string;
     avatar: string | null;
     createdAt: string;
+    twoFactorEnabled?: boolean;
     stripeAccountStatus?: string | null;
     subscriptionStatus?: string | null;
     currentPeriodEnd?: string | null;
@@ -142,7 +143,10 @@ export default function ConfiguracoesPage() {
                 </TabsContent>
 
                 <TabsContent value="seguranca" className="mt-6">
-                    <SecuritySection />
+                    <SecuritySection
+                        twoFactorEnabled={profile.twoFactorEnabled ?? false}
+                        onUpdate={fetchProfile}
+                    />
                 </TabsContent>
             </Tabs>
         </div>

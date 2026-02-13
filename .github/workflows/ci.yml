@@ -6,8 +6,101 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  ci:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Cache node_modules
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/api/node_modules
+            apps/web/node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        working-directory: apps/api
+
+      - name: Cache Prisma client
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.prisma
+          key: prisma-${{ runner.os }}-${{ hashFiles('apps/api/prisma/schema.prisma') }}
+
+  typecheck-api:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/api/node_modules
+            apps/web/node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Restore Prisma client
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.prisma
+          key: prisma-${{ runner.os }}-${{ hashFiles('apps/api/prisma/schema.prisma') }}
+
+      - name: Type check API
+        run: npx tsc --noEmit
+        working-directory: apps/api
+
+  lint-web:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/api/node_modules
+            apps/web/node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Lint Web
+        run: npx turbo run lint --filter=web
+
+  test-api:
+    needs: install
     runs-on: ubuntu-latest
 
     services:
@@ -33,28 +126,104 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/api/node_modules
+            apps/web/node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
-      - name: Generate Prisma Client
-        run: npx prisma generate
-        working-directory: apps/api
+      - name: Restore Prisma client
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.prisma
+          key: prisma-${{ runner.os }}-${{ hashFiles('apps/api/prisma/schema.prisma') }}
 
-      - name: Type check API
-        run: npx tsc --noEmit
-        working-directory: apps/api
-
-      - name: Lint Web
-        run: npx turbo run lint --filter=web
-
-      - name: Test API
+      - name: Run API tests
         run: npx turbo run test --filter=api
+
+  build-web:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/api/node_modules
+            apps/web/node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: apps/web/.next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('apps/web/package.json') }}-${{ hashFiles('apps/web/src/**') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('apps/web/package.json') }}-
 
       - name: Build Web
         run: npx turbo run build --filter=web
+
+  docker-build:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: freelance-api:ci-${{ github.sha }}
+
+      - name: Build Web Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: freelance-web:ci-${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://localhost:3001
+
+  ci-status:
+    if: always()
+    needs: [typecheck-api, lint-web, test-api, build-web, docker-build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI status
+        run: |
+          if [ "${{ needs.typecheck-api.result }}" != "success" ] || \
+             [ "${{ needs.lint-web.result }}" != "success" ] || \
+             [ "${{ needs.test-api.result }}" != "success" ] || \
+             [ "${{ needs.build-web.result }}" != "success" ] || \
+             [ "${{ needs.docker-build.result }}" != "success" ]; then
+            echo "One or more CI jobs failed"
+            exit 1
+          fi
+          echo "All CI jobs passed!"

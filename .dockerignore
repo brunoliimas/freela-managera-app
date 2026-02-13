@@ -5,6 +5,14 @@ coverage
 .env
 .env.*
 !.env.example
+!.env.docker.example
 .git
 *.log
 .turbo
+.github
+.vscode
+.claude
+.husky
+__tests__
+*.test.ts
+*.spec.ts

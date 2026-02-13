@@ -20,9 +20,13 @@ interface AuthState {
     user: User | null;
     isLoading: boolean;
     isHydrated: boolean;
+    pending2FA: { tempToken: string } | null;
     login: (data: LoginInput) => Promise<void>;
     register: (data: RegisterInput) => Promise<void>;
     logout: () => Promise<void>;
+    verify2FA: (token: string) => Promise<void>;
+    verifyRecoveryCode: (code: string) => Promise<void>;
+    clearPending2FA: () => void;
     setUser: (user: User) => void;
     setHydrated: () => void;
 }
@@ -33,6 +37,7 @@ export const useAuth = create<AuthState>()(
             user: null,
             isLoading: false,
             isHydrated: false,
+            pending2FA: null,
 
             setHydrated: () => set({ isHydrated: true }),
 
@@ -40,9 +45,18 @@ export const useAuth = create<AuthState>()(
                 set({ isLoading: true });
                 try {
                     const response = await api.post('/auth/login', data);
+
+                    if (response.data.requires2FA) {
+                        set({
+                            isLoading: false,
+                            pending2FA: { tempToken: response.data.tempToken },
+                        });
+                        return;
+                    }
+
                     const { user } = response.data;
                     // Token é gerenciado via httpOnly cookie pelo servidor
-                    set({ user, isLoading: false });
+                    set({ user, isLoading: false, pending2FA: null });
                 } catch (error) {
                     set({ isLoading: false });
                     if (axios.isAxiosError(error)) {
@@ -74,8 +88,52 @@ export const useAuth = create<AuthState>()(
                 } catch {
                     // Limpar estado local mesmo se a chamada falhar
                 }
-                set({ user: null });
+                set({ user: null, pending2FA: null });
             },
+
+            verify2FA: async (token: string) => {
+                const state = useAuth.getState();
+                if (!state.pending2FA) throw new Error('Nenhuma verificação 2FA pendente');
+
+                set({ isLoading: true });
+                try {
+                    const response = await api.post('/auth/2fa/verify', {
+                        tempToken: state.pending2FA.tempToken,
+                        token,
+                    });
+                    const { user } = response.data;
+                    set({ user, isLoading: false, pending2FA: null });
+                } catch (error) {
+                    set({ isLoading: false });
+                    if (axios.isAxiosError(error)) {
+                        throw new Error(error.response?.data?.error || 'Código inválido');
+                    }
+                    throw new Error('Erro ao verificar 2FA');
+                }
+            },
+
+            verifyRecoveryCode: async (code: string) => {
+                const state = useAuth.getState();
+                if (!state.pending2FA) throw new Error('Nenhuma verificação 2FA pendente');
+
+                set({ isLoading: true });
+                try {
+                    const response = await api.post('/auth/2fa/verify-recovery', {
+                        tempToken: state.pending2FA.tempToken,
+                        recoveryCode: code,
+                    });
+                    const { user } = response.data;
+                    set({ user, isLoading: false, pending2FA: null });
+                } catch (error) {
+                    set({ isLoading: false });
+                    if (axios.isAxiosError(error)) {
+                        throw new Error(error.response?.data?.error || 'Código de recuperação inválido');
+                    }
+                    throw new Error('Erro ao verificar código de recuperação');
+                }
+            },
+
+            clearPending2FA: () => set({ pending2FA: null }),
 
             setUser: (user: User) => set({ user }),
         }),

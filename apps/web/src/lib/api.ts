@@ -14,8 +14,15 @@ api.interceptors.response.use(
                 const currentPath = window.location.pathname;
                 // Evitar loop de redirecionamento em páginas públicas
                 if (currentPath !== '/login' && currentPath !== '/register') {
-                    window.location.href = '/login';
+                    window.location.assign('/login');
                 }
+            }
+        }
+
+        // 2FA enforcement: token exists but 2FA not verified
+        if (error.response?.status === 403 && error.response?.data?.requires2FA) {
+            if (typeof window !== 'undefined') {
+                window.location.assign('/login');
             }
         }
         return Promise.reject(error);

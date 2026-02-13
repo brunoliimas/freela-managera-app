@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt';
+import prisma from '../config/database';
 
 export interface AuthRequest extends Request {
     userId?: string;
     userEmail?: string;
 }
 
-export const authMiddleware = (
+export const authMiddleware = async (
     req: AuthRequest,
     res: Response,
     next: NextFunction
@@ -35,8 +36,23 @@ export const authMiddleware = (
         req.userId = decoded.userId;
         req.userEmail = decoded.email;
 
+        // Check 2FA enforcement
+        if (!decoded.twoFactorVerified) {
+            const user = await prisma.user.findUnique({
+                where: { id: decoded.userId },
+                select: { twoFactorEnabled: true },
+            });
+
+            if (user?.twoFactorEnabled) {
+                return res.status(403).json({
+                    error: 'Verificação 2FA necessária',
+                    requires2FA: true,
+                });
+            }
+        }
+
         next();
-    } catch (error) {
+    } catch {
         return res.status(401).json({ error: 'Token inválido ou expirado' });
     }
 };

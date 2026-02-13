@@ -27,6 +27,14 @@ export default function LoginPage() {
     const onSubmit = async (data: LoginInput) => {
         try {
             await login(data);
+
+            // Check if 2FA verification is needed
+            const state = useAuth.getState();
+            if (state.pending2FA) {
+                router.push('/2fa-verify');
+                return;
+            }
+
             toast.success('Login realizado!', {
                 description: 'Bem-vindo de volta.',
             });

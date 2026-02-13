@@ -17,6 +17,10 @@ COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/
 RUN npm ci --workspace=web
 
+# Build argument for API URL (needed at build time for Next.js)
+ARG NEXT_PUBLIC_API_URL=http://localhost:3001
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Copiar código do Web
 COPY apps/web ./apps/web
 

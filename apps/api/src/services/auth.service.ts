@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import prisma from '../config/database';
-import { generateToken } from '../utils/jwt';
+import { generateToken, generateTempToken } from '../utils/jwt';
 import { sendEmail } from '../config/email';
 import { templateRecuperacaoSenha } from '../templates/email-templates';
 import { AppError } from '../utils/errors';
@@ -26,6 +26,7 @@ const PROFILE_SELECT = {
     avatar: true,
     cpf: true,
     cnpj: true,
+    twoFactorEnabled: true,
     stripeAccountStatus: true,
     subscriptionStatus: true,
     currentPeriodEnd: true,
@@ -47,8 +48,10 @@ interface RegisterInput {
 }
 
 interface LoginResult {
-    user: Record<string, unknown>;
-    token: string;
+    user?: Record<string, unknown>;
+    token?: string;
+    requires2FA?: boolean;
+    tempToken?: string;
 }
 
 interface RegisterResult {
@@ -97,6 +100,12 @@ export class AuthService {
 
         if (!isPasswordValid) {
             throw new AppError('Email ou senha incorretos', 401);
+        }
+
+        // Check if 2FA is enabled
+        if (user.twoFactorEnabled) {
+            const tempToken = generateTempToken({ userId: user.id, pending2FA: true });
+            return { requires2FA: true, tempToken };
         }
 
         const token = generateToken({ userId: user.id, email: user.email });
