@@ -36,18 +36,22 @@ export const authMiddleware = async (
         req.userId = decoded.userId;
         req.userEmail = decoded.email;
 
-        // Check 2FA enforcement
+        // Check 2FA enforcement — fail-open so DB errors don't block valid tokens
         if (!decoded.twoFactorVerified) {
-            const user = await prisma.user.findUnique({
-                where: { id: decoded.userId },
-                select: { twoFactorEnabled: true },
-            });
-
-            if (user?.twoFactorEnabled) {
-                return res.status(403).json({
-                    error: 'Verificação 2FA necessária',
-                    requires2FA: true,
+            try {
+                const user = await prisma.user.findUnique({
+                    where: { id: decoded.userId },
+                    select: { twoFactorEnabled: true },
                 });
+
+                if (user?.twoFactorEnabled) {
+                    return res.status(403).json({
+                        error: 'Verificação 2FA necessária',
+                        requires2FA: true,
+                    });
+                }
+            } catch {
+                // DB error on 2FA check — allow request through
             }
         }
 

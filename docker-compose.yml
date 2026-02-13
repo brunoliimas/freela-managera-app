@@ -28,7 +28,7 @@ services:
     ports:
       - "${API_PORT:-3001}:3001"
     env_file:
-      - .env.docker
+      - .env
     environment:
       NODE_ENV: production
       PORT: 3001

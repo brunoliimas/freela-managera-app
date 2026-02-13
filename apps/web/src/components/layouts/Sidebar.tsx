@@ -7,8 +7,6 @@ import {
     Users,
     FileText,
     FolderKanban,
-    Settings,
-    LogOut,
     BarChart3,
     Paperclip,
     CreditCard,
@@ -19,9 +17,6 @@ import {
     LayoutTemplate,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
 const menuItems = [
@@ -89,16 +84,6 @@ const menuItems = [
 
 export function Sidebar() {
     const pathname = usePathname();
-    const { user, logout } = useAuth();
-
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map(n => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    };
 
     return (
         <div className="flex flex-col h-full bg-slate-900 text-white w-64 fixed left-0 top-0">
@@ -111,7 +96,7 @@ export function Sidebar() {
             <Separator className="bg-slate-700" />
 
             {/* Menu Items */}
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
@@ -134,61 +119,6 @@ export function Sidebar() {
                 })}
             </nav>
 
-            <Separator className="bg-slate-700" />
-
-            {/* User Info */}
-            <div className="p-4 space-y-2">
-                
-
-                <div className="flex items-center gap-3 px-4 py-3">
-                    <Avatar>
-                        {user?.avatar && (
-                            <AvatarImage
-                                src={user.avatar.startsWith('http') ? user.avatar : `${process.env.NEXT_PUBLIC_API_URL}${user.avatar}`}
-                                alt={user.name}
-                            />
-                        )}
-                        <AvatarFallback className="bg-blue-600">
-                            {user?.name ? getInitials(user.name) : 'U'}
-                        </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                            <p className="text-sm font-medium truncate">{user?.name}</p>
-                            {user?.plan && user.plan !== 'FREE' && (
-                                <span className={cn(
-                                    'text-[10px] font-bold px-1.5 py-0.5 rounded',
-                                    user.plan === 'PRO' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-white'
-                                )}>
-                                    {user.plan}
-                                </span>
-                            )}
-                        </div>
-                        <p className="text-xs text-slate-400 truncate">{user?.email}</p>
-                    </div>
-                </div>
-                <Link
-                    href="/configuracoes"
-                    className={cn(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
-                        pathname === '/configuracoes'
-                            ? 'bg-blue-600 text-white'
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                    )}
-                >
-                    <Settings size={20} />
-                    <span className="font-medium">Configurações</span>
-                </Link>
-
-                <Button
-                    variant="ghost"
-                    className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white cursor-pointer"
-                    onClick={logout}
-                >
-                    <LogOut size={20} className="mr-3" />
-                    Sair
-                </Button>
-            </div>
         </div>
     );
 }

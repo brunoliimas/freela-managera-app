@@ -14,6 +14,8 @@ api.interceptors.response.use(
                 const currentPath = window.location.pathname;
                 // Evitar loop de redirecionamento em páginas públicas
                 if (currentPath !== '/login' && currentPath !== '/register') {
+                    // Limpar estado de auth antes de redirecionar para evitar loop
+                    localStorage.removeItem('auth-storage');
                     window.location.assign('/login');
                 }
             }
@@ -22,6 +24,7 @@ api.interceptors.response.use(
         // 2FA enforcement: token exists but 2FA not verified
         if (error.response?.status === 403 && error.response?.data?.requires2FA) {
             if (typeof window !== 'undefined') {
+                localStorage.removeItem('auth-storage');
                 window.location.assign('/login');
             }
         }
