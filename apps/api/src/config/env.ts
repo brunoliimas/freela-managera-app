@@ -23,6 +23,17 @@ const envSchema = z.object({
     SMTP_PASS: z.string().optional(),
     SMTP_FROM: z.string().optional(),
 
+    // Stripe
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    STRIPE_PRO_PRICE_ID: z.string().optional(),
+    STRIPE_ENTERPRISE_PRICE_ID: z.string().optional(),
+    PLATFORM_FEE_PERCENT: z.coerce.number().default(3),
+
+    // eNotas (NFS-e)
+    ENOTAS_API_KEY: z.string().optional(),
+    ENOTAS_WEBHOOK_SECRET: z.string().optional(),
+
     // App
     APP_NAME: z.string().default('FreelanceManager'),
     APP_URL: z.string().default('http://localhost:3000'),

@@ -1,9 +1,30 @@
 import { Response } from 'express';
 import { AuthRequest } from '../../middlewares/auth.middleware';
 
+jest.mock('../../config/logger', () => ({
+    __esModule: true,
+    default: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+}));
+
+jest.mock('../../config/env', () => ({
+    env: {
+        DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+        JWT_SECRET: 'test-secret-key-with-minimum-32-chars-for-testing',
+        FRONTEND_URL: 'http://localhost:3000',
+        PLATFORM_FEE_PERCENT: 3,
+    },
+}));
+
 jest.mock('../../services/notificacao.service', () => ({
     NotificacaoService: {
         notificarPagamentoConfirmado: jest.fn().mockResolvedValue(undefined),
+    },
+}));
+
+jest.mock('../../services/checkout.service', () => ({
+    CheckoutService: {
+        criarLinkPagamento: jest.fn().mockResolvedValue({ paymentUrl: 'https://checkout.stripe.com/test' }),
+        handlePaymentSuccess: jest.fn().mockResolvedValue(undefined),
     },
 }));
 

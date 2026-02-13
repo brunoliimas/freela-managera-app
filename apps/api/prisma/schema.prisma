@@ -34,8 +34,21 @@ model User {
   resetPasswordExpires DateTime?
 
   // Plano e assinatura
-  plan             Plan    @default(FREE)
-  stripeCustomerId String? @unique
+  plan                 Plan      @default(FREE)
+  stripeCustomerId     String?   @unique
+  stripeAccountId      String?   @unique  // Stripe Connect Express
+  stripeAccountStatus  String?             // 'pending' | 'active' | 'restricted'
+  stripeSubscriptionId String?
+  subscriptionStatus   String?             // 'active' | 'canceled' | 'past_due' | 'trialing'
+  currentPeriodEnd     DateTime?
+
+  // Dados fiscais (NFS-e)
+  enotasEmpresaId    String?          // ID da empresa na eNotas
+  cnae               String?          // Código CNAE principal
+  issAliquota        Decimal? @db.Decimal(5, 2) // Alíquota ISS (%)
+  inscricaoMunicipal String?
+  regimeTributario   Int?             // 1-SimplesNacional, 2-LucroPresumido, etc.
+  codigoServico      String?          // Código do serviço municipal
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -48,6 +61,10 @@ model User {
   pagamentos   Pagamento[]
   templates    Template[]
   notificacoes Notificacao[]
+  notasFiscais NotaFiscal[]
+  timeEntries  TimeEntry[]
+  despesas     Despesa[]
+  comentarios  Comentario[]
 
   @@map("users")
 }
@@ -201,9 +218,12 @@ model Projeto {
   orcamentoId String?    @unique
   orcamento   Orcamento? @relation(fields: [orcamentoId], references: [id])
 
-  milestones Milestone[]
-  pagamentos Pagamento[]
-  arquivos   Arquivo[]
+  milestones  Milestone[]
+  pagamentos  Pagamento[]
+  arquivos    Arquivo[]
+  timeEntries TimeEntry[]
+  despesas    Despesa[]
+  comentarios Comentario[]
 
   @@index([userId])
   @@index([clienteId])
@@ -276,6 +296,11 @@ model Pagamento {
   // Comprovante
   receipt String? // URL do comprovante
 
+  // Stripe
+  stripePaymentIntentId   String? @unique
+  stripeCheckoutSessionId String?
+  paymentUrl              String? // Checkout URL para cliente pagar
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -286,6 +311,8 @@ model Pagamento {
 
   projetoId String
   projeto   Projeto @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+
+  notaFiscal NotaFiscal?
 
   @@index([userId])
   @@index([projetoId])
@@ -298,6 +325,59 @@ enum PagamentoStatus {
   PAGO
   ATRASADO
   CANCELADO
+}
+
+// ============================================
+// NOTAS FISCAIS (NFS-e)
+// ============================================
+
+model NotaFiscal {
+  id String @id @default(cuid())
+
+  // eNotas
+  enotasNfeId       String? @unique
+  numero            String?
+  codigoVerificacao String?
+
+  // Dados da nota
+  status           NotaFiscalStatus @default(PENDENTE)
+  descricaoServico String           @db.Text
+  valor            Decimal          @db.Decimal(10, 2)
+  issAliquota      Decimal          @db.Decimal(5, 2)
+  issValor         Decimal          @db.Decimal(10, 2)
+
+  // Arquivos
+  pdfUrl String?
+  xmlUrl String?
+
+  // Rejeição / Cancelamento
+  motivoRejeicao     String?
+  motivoCancelamento String?
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  emitidaEm   DateTime?
+  canceladaEm DateTime?
+
+  // Relações
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pagamentoId String    @unique
+  pagamento   Pagamento @relation(fields: [pagamentoId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("notas_fiscais")
+}
+
+enum NotaFiscalStatus {
+  PENDENTE    // Criada localmente
+  PROCESSANDO // Enviada para eNotas
+  AUTORIZADA  // Autorizada pela prefeitura
+  REJEITADA   // Rejeitada pela prefeitura
+  CANCELADA
 }
 
 // ============================================
@@ -333,6 +413,7 @@ model Template {
   name    String
   type    TemplateType
   content String       @db.Text // HTML ou Markdown
+  value   Decimal?     @db.Decimal(10, 2) // Valor padrão para pré-preenchimento
 
   // Status
   active Boolean @default(true)
@@ -348,6 +429,32 @@ model Template {
   @@index([userId])
   @@index([type])
   @@map("templates")
+}
+
+// ============================================
+// COMENTÁRIOS EM PROJETOS (Threaded)
+// ============================================
+
+model Comentario {
+  id      String @id @default(cuid())
+  content String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  projetoId String
+  projeto   Projeto @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   Comentario?  @relation("ComentarioReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comentario[] @relation("ComentarioReplies")
+
+  @@index([projetoId])
+  @@index([parentId])
+  @@map("comentarios")
 }
 
 enum TemplateType {
@@ -434,4 +541,71 @@ enum NotificacaoType {
   MILESTONE_CONCLUIDO
   ARQUIVO_DISPONIVEL
   SOLICITACAO_RECEBIDA
+  NFSE_AUTORIZADA
+  NFSE_REJEITADA
+}
+
+// ============================================
+// TIME TRACKING
+// ============================================
+
+model TimeEntry {
+  id          String    @id @default(cuid())
+  description String
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?      // Duração em minutos (calculado ou manual)
+  billable    Boolean   @default(true)
+  hourlyRate  Decimal?  @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projetoId String
+  projeto   Projeto @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([projetoId])
+  @@map("time_entries")
+}
+
+// ============================================
+// DESPESAS
+// ============================================
+
+model Despesa {
+  id          String          @id @default(cuid())
+  description String
+  value       Decimal         @db.Decimal(10, 2)
+  date        DateTime
+  category    DespesaCategory
+  receipt     String?
+  notes       String?         @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projetoId String?
+  projeto   Projeto? @relation(fields: [projetoId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([projetoId])
+  @@index([category])
+  @@map("despesas")
+}
+
+enum DespesaCategory {
+  SOFTWARE
+  HARDWARE
+  TRANSPORTE
+  ALIMENTACAO
+  MARKETING
+  EDUCACAO
+  ESCRITORIO
+  IMPOSTOS
+  OUTROS
 }

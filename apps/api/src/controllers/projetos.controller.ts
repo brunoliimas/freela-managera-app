@@ -3,6 +3,7 @@ import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import logger from '../config/logger';
 import { NotificacaoService } from '../services/notificacao.service';
+import { PLAN_LIMITS } from '../config/plans';
 
 export const getProjetos = async (req: AuthRequest, res: Response) => {
     try {
@@ -103,6 +104,22 @@ export const createProjeto = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({
                 error: 'Cliente, título, descrição e valor são obrigatórios',
             });
+        }
+
+        // Verificar limite do plano
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { plan: true },
+        });
+        const limits = PLAN_LIMITS[user!.plan];
+        if (limits.maxProjetos !== Infinity) {
+            const count = await prisma.projeto.count({ where: { userId } });
+            if (count >= limits.maxProjetos) {
+                return res.status(403).json({
+                    error: `Limite de ${limits.maxProjetos} projetos atingido no plano ${user!.plan}. Faça upgrade para adicionar mais.`,
+                    requiredPlan: 'PRO',
+                });
+            }
         }
 
         const lastProjeto = await prisma.projeto.findFirst({

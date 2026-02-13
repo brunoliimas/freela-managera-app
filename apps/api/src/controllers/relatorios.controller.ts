@@ -193,17 +193,79 @@ export const getRelatorioFinanceiro = async (req: AuthRequest, res: Response) =>
             }),
         ]);
 
+        // Despesas mensais
+        const despesasPorMes = await prisma.$queryRaw<Array<{ mes: number; total: number }>>`
+          SELECT
+            EXTRACT(MONTH FROM "date") as mes,
+            SUM(value) as total
+          FROM "despesas"
+          WHERE "userId" = ${userId}
+            AND "date" >= ${dataInicio}
+            AND "date" <= ${dataFim}
+          GROUP BY mes
+          ORDER BY mes
+        `;
+
+        const despesasMensal = Array.from({ length: 12 }, (_, i) => {
+            const mes = i + 1;
+            const despesa = despesasPorMes.find(d => Number(d.mes) === mes);
+            return {
+                mes: mes,
+                mesNome: new Date(anoAtual, i).toLocaleString('pt-BR', { month: 'short' }),
+                valor: despesa ? Number(despesa.total) : 0,
+            };
+        });
+
+        // Horas mensais
+        const horasPorMes = await prisma.$queryRaw<Array<{ mes: number; total: number }>>`
+          SELECT
+            EXTRACT(MONTH FROM "startTime") as mes,
+            SUM(duration) as total
+          FROM "time_entries"
+          WHERE "userId" = ${userId}
+            AND "endTime" IS NOT NULL
+            AND "startTime" >= ${dataInicio}
+            AND "startTime" <= ${dataFim}
+          GROUP BY mes
+          ORDER BY mes
+        `;
+
+        const horasMensal = Array.from({ length: 12 }, (_, i) => {
+            const mes = i + 1;
+            const hora = horasPorMes.find(h => Number(h.mes) === mes);
+            const minutos = hora ? Number(hora.total) : 0;
+            return {
+                mes: mes,
+                mesNome: new Date(anoAtual, i).toLocaleString('pt-BR', { month: 'short' }),
+                minutos,
+                horas: Number((minutos / 60).toFixed(1)),
+            };
+        });
+
+        // Total despesas do ano
+        const totalDespesas = despesasMensal.reduce((sum, d) => sum + d.valor, 0);
+        const totalHorasAno = horasMensal.reduce((sum, h) => sum + h.minutos, 0);
+        const faturamentoTotal = totalRecebido._sum.value?.toNumber() || 0;
+
         const resumo = {
-            totalRecebido: totalRecebido._sum.value?.toNumber() || 0,
+            totalRecebido: faturamentoTotal,
             totalAReceber: totalAReceber._sum.value?.toNumber() || 0,
+            totalDespesas,
+            lucroLiquido: faturamentoTotal - totalDespesas,
             ticketMedio: ticketMedio._avg.value?.toNumber() || 0,
             projetosConcluidos: projetosConcluidos.length,
             tempoMedioEntrega,
+            totalHoras: Number((totalHorasAno / 60).toFixed(1)),
+            valorHoraEfetivo: totalHorasAno > 0
+                ? Number((faturamentoTotal / (totalHorasAno / 60)).toFixed(2))
+                : 0,
         };
 
         return res.json({
             ano: anoAtual,
             faturamentoMensal,
+            despesasMensal,
+            horasMensal,
             projetosPorStatus: projetosPorStatus.map(p => ({
                 status: p.status,
                 quantidade: p._count.id,

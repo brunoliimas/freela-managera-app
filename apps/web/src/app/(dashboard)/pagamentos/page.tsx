@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Eye, Pencil, Trash2, MoreVertical, DollarSign, CheckCircle } from 'lucide-react';
+import { Plus, Eye, Pencil, Trash2, MoreVertical, DollarSign, CheckCircle, Link2, Copy, Download, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -44,6 +44,8 @@ import { formatDate, formatCurrency } from '@/lib/format';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { downloadFile } from '@/lib/download';
+import { useAuth } from '@/hooks/useAuth';
 
 const statusColors: Record<string, string> = {
     PENDENTE: 'bg-yellow-500',
@@ -61,6 +63,8 @@ const statusLabels: Record<string, string> = {
 
 export default function PagamentosPage() {
     const router = useRouter();
+    const { user } = useAuth();
+    const isPro = user?.plan === 'PRO' || user?.plan === 'ENTERPRISE';
     const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -147,10 +151,19 @@ export default function PagamentosPage() {
                         Gerencie os recebimentos dos seus projetos
                     </p>
                 </div>
-                <Button onClick={handleNew}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Novo Pagamento
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => downloadFile('/export/pagamentos', 'pagamentos.csv').catch(() => toast.error('Erro ao exportar'))}
+                    >
+                        <Download className="mr-2 h-4 w-4" />
+                        Exportar CSV
+                    </Button>
+                    <Button onClick={handleNew}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Novo Pagamento
+                    </Button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -291,6 +304,35 @@ export default function PagamentosPage() {
                                                     <DropdownMenuItem onClick={() => handleMarcarPago(pagamento)}>
                                                         <CheckCircle className="mr-2 h-4 w-4" />
                                                         Marcar como Pago
+                                                    </DropdownMenuItem>
+                                                )}
+                                                {pagamento.status !== 'PAGO' && (
+                                                    <DropdownMenuItem
+                                                        onClick={async () => {
+                                                            try {
+                                                                const { data } = await api.post(`/pagamentos/${pagamento.id}/gerar-link`);
+                                                                await navigator.clipboard.writeText(data.paymentUrl);
+                                                                toast.success('Link copiado!', {
+                                                                    description: 'Link de pagamento copiado para a área de transferência',
+                                                                });
+                                                                fetchPagamentos();
+                                                            } catch (error) {
+                                                                const axiosErr = error as { response?: { data?: { error?: string } } };
+                                                                const msg = axiosErr.response?.data?.error || 'Erro ao gerar link';
+                                                                toast.error(msg);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Link2 className="mr-2 h-4 w-4" />
+                                                        Gerar Link de Pagamento
+                                                    </DropdownMenuItem>
+                                                )}
+                                                {pagamento.status === 'PAGO' && isPro && (
+                                                    <DropdownMenuItem
+                                                        onClick={() => router.push('/notas-fiscais')}
+                                                    >
+                                                        <Receipt className="mr-2 h-4 w-4" />
+                                                        Emitir NFS-e
                                                     </DropdownMenuItem>
                                                 )}
                                                 <DropdownMenuItem onClick={() => handleEdit(pagamento)}>

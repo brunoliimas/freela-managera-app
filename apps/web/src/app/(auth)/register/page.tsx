@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,9 +11,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuth } from '@/hooks/useAuth';
 import { registerSchema, RegisterInput } from '@/lib/validations/auth';
 import { toast } from 'sonner';
+import { Crown } from 'lucide-react';
+import api from '@/lib/api';
 
 export default function RegisterPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const selectedPlan = searchParams.get('plan')?.toUpperCase() as 'PRO' | 'ENTERPRISE' | null;
     const { register: registerUser, isLoading } = useAuth();
 
     const {
@@ -30,6 +34,18 @@ export default function RegisterPage() {
             toast.success('Conta criada!', {
                 description: 'Bem-vindo ao Freelance Manager.',
             });
+
+            // Se escolheu plano pago, redirecionar para checkout do Stripe
+            if (selectedPlan && ['PRO', 'ENTERPRISE'].includes(selectedPlan)) {
+                try {
+                    const { data: billing } = await api.post('/billing/checkout', { plan: selectedPlan });
+                    window.location.assign(billing.url);
+                    return;
+                } catch {
+                    toast.info('Redirecionando para o dashboard. Você pode assinar depois em Configurações.');
+                }
+            }
+
             router.push('/dashboard');
         } catch (error: unknown) {
             const message =
@@ -49,6 +65,12 @@ export default function RegisterPage() {
                 <CardDescription>
                     Preencha os dados abaixo para criar sua conta
                 </CardDescription>
+                {selectedPlan && (
+                    <div className="flex items-center gap-2 mt-2 rounded-lg bg-blue-50 dark:bg-blue-950/30 px-3 py-2 text-sm text-blue-700 dark:text-blue-300">
+                        <Crown className="h-4 w-4" />
+                        Plano {selectedPlan} selecionado — você será redirecionado para o pagamento após criar a conta
+                    </div>
+                )}
             </CardHeader>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <CardContent className="space-y-4 mb-4">

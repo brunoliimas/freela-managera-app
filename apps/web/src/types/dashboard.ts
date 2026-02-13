@@ -21,6 +21,13 @@ export interface DashboardStats {
         valorAndamento: number;
         valorConcluidos: number;
     };
+    timeTracking: {
+        horasEstaSemana: number;
+        minutosEstaSemana: number;
+    };
+    despesas: {
+        totalEsteMes: number;
+    };
 }
 
 export interface DashboardRecentes {

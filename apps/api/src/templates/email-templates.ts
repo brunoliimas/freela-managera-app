@@ -448,6 +448,75 @@ export function templateMilestoneConcluidoCliente(data: {
     return getEmailLayout(content);
 }
 
+// ============================================
+// TEMPLATES NFS-e
+// ============================================
+
+// Template: NFS-e autorizada
+export function templateNFSeAutorizada(data: {
+    numero: string;
+    descricao: string;
+    valor: string;
+    clienteNome: string;
+    projetoTitulo: string;
+}): string {
+    const content = `
+    <h2>✅ NFS-e Autorizada!</h2>
+    <p>Sua nota fiscal de serviço foi autorizada pela prefeitura.</p>
+
+    <div class="info-box">
+      <h3>Nota Fiscal ${data.numero}</h3>
+      <p><strong>Serviço:</strong> ${data.descricao}</p>
+      <p><strong>Cliente:</strong> ${data.clienteNome}</p>
+      <p><strong>Projeto:</strong> ${data.projetoTitulo}</p>
+      <p><strong>Valor:</strong> ${data.valor}</p>
+    </div>
+
+    <p>Você pode baixar o PDF e XML da nota no sistema.</p>
+
+    <a href="${process.env.APP_URL || 'http://localhost:3000'}/notas-fiscais" class="button">
+      Ver Notas Fiscais
+    </a>
+  `;
+
+    return getEmailLayout(content);
+}
+
+// Template: NFS-e rejeitada
+export function templateNFSeRejeitada(data: {
+    descricao: string;
+    valor: string;
+    clienteNome: string;
+    projetoTitulo: string;
+    motivo: string;
+}): string {
+    const content = `
+    <h2>❌ NFS-e Rejeitada</h2>
+    <p>Sua nota fiscal de serviço foi rejeitada pela prefeitura.</p>
+
+    <div class="alert-box">
+      <p><strong>Serviço:</strong> ${data.descricao}</p>
+      <p><strong>Cliente:</strong> ${data.clienteNome}</p>
+      <p><strong>Projeto:</strong> ${data.projetoTitulo}</p>
+      <p><strong>Valor:</strong> ${data.valor}</p>
+      <p><strong>Motivo:</strong> ${data.motivo}</p>
+    </div>
+
+    <p><strong>Sugestões:</strong></p>
+    <ul>
+      <li>Verifique os dados fiscais nas configurações</li>
+      <li>Corrija o motivo da rejeição</li>
+      <li>Tente emitir novamente</li>
+    </ul>
+
+    <a href="${process.env.APP_URL || 'http://localhost:3000'}/notas-fiscais" class="button">
+      Ver Notas Fiscais
+    </a>
+  `;
+
+    return getEmailLayout(content);
+}
+
 // Template: Novo arquivo disponível (para cliente)
 export function templateNovoArquivoCliente(data: {
     clienteNome: string;

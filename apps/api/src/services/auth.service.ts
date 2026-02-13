@@ -7,6 +7,7 @@ import { templateRecuperacaoSenha } from '../templates/email-templates';
 import { AppError } from '../utils/errors';
 import { generateUniqueSlug } from '../utils/slugify';
 import { env } from '../config/env';
+import { BillingService } from './billing.service';
 
 const USER_SELECT = {
     id: true,
@@ -25,6 +26,16 @@ const PROFILE_SELECT = {
     avatar: true,
     cpf: true,
     cnpj: true,
+    stripeAccountStatus: true,
+    subscriptionStatus: true,
+    currentPeriodEnd: true,
+    // Dados fiscais
+    enotasEmpresaId: true,
+    cnae: true,
+    issAliquota: true,
+    inscricaoMunicipal: true,
+    regimeTributario: true,
+    codigoServico: true,
 };
 
 interface RegisterInput {
@@ -66,6 +77,9 @@ export class AuthService {
         });
 
         const token = generateToken({ userId: user.id, email: user.email });
+
+        // Criar Stripe Customer async (não bloqueia registro)
+        BillingService.ensureCustomer(user.id).catch(() => {});
 
         return { user, token };
     }

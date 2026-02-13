@@ -10,6 +10,7 @@ import { apiRateLimit } from './middlewares/rate-limit.middleware';
 import path from 'path';
 import { iniciarCronJobs } from './cron/jobs';
 import { setupSwagger } from './docs/setupSwagger';
+import webhookRoutes from './routes/webhook.routes';
 
 const app = express();
 
@@ -30,6 +31,8 @@ app.use(cors({
     credentials: true,
 }));
 app.use(cookieParser());
+// Webhook do Stripe ANTES do express.json() (precisa body raw)
+app.use('/api/v1/webhooks', webhookRoutes);
 app.use(express.json());
 // Swagger docs (fora do versionamento)
 setupSwagger(app);

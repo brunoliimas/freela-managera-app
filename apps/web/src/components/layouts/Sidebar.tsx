@@ -12,7 +12,11 @@ import {
     BarChart3,
     Paperclip,
     CreditCard,
-    Calendar
+    Calendar,
+    Receipt,
+    Clock,
+    Wallet,
+    LayoutTemplate,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -42,6 +46,11 @@ const menuItems = [
         icon: FileText,
     },
     {
+        title: 'Templates',
+        href: '/templates',
+        icon: LayoutTemplate,
+    },
+    {
         title: 'Projetos',
         href: '/projetos',
         icon: FolderKanban,
@@ -50,6 +59,21 @@ const menuItems = [
         title: 'Pagamentos',
         href: '/pagamentos',
         icon: CreditCard,
+    },
+    {
+        title: 'Time Tracking',
+        href: '/time-tracking',
+        icon: Clock,
+    },
+    {
+        title: 'Despesas',
+        href: '/despesas',
+        icon: Wallet,
+    },
+    {
+        title: 'Notas Fiscais',
+        href: '/notas-fiscais',
+        icon: Receipt,
     },
     {
         title: 'Relatórios',
@@ -129,7 +153,17 @@ export function Sidebar() {
                         </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{user?.name}</p>
+                        <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-medium truncate">{user?.name}</p>
+                            {user?.plan && user.plan !== 'FREE' && (
+                                <span className={cn(
+                                    'text-[10px] font-bold px-1.5 py-0.5 rounded',
+                                    user.plan === 'PRO' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-white'
+                                )}>
+                                    {user.plan}
+                                </span>
+                            )}
+                        </div>
                         <p className="text-xs text-slate-400 truncate">{user?.email}</p>
                     </div>
                 </div>

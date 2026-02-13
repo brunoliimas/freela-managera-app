@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -21,6 +22,8 @@ import {
 } from '@/components/ui/table';
 import apiPortal from '@/lib/api-portal';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { CreditCard, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Pagamento {
     id: string;
@@ -30,6 +33,7 @@ interface Pagamento {
     paidAt: string | null;
     status: string;
     method: string | null;
+    paymentUrl: string | null;
     projeto: {
         number: string;
         title: string;
@@ -54,6 +58,7 @@ export default function PortalPagamentosPage() {
     const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [payingId, setPayingId] = useState<string | null>(null);
 
     const fetchPagamentos = useCallback(async () => {
         try {
@@ -120,6 +125,7 @@ export default function PortalPagamentosPage() {
                             <TableHead>Vencimento</TableHead>
                             <TableHead>Pagamento</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -136,7 +142,7 @@ export default function PortalPagamentosPage() {
                             ))
                         ) : filteredPagamentos.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center py-12 text-slate-500">
+                                <TableCell colSpan={7} className="text-center py-12 text-slate-500">
                                     Nenhum pagamento encontrado.
                                 </TableCell>
                             </TableRow>
@@ -159,6 +165,34 @@ export default function PortalPagamentosPage() {
                                         <Badge className={statusColors[pg.status] || 'bg-slate-100 text-slate-800'}>
                                             {statusLabels[pg.status] || pg.status}
                                         </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        {(pg.status === 'PENDENTE' || pg.status === 'ATRASADO') && pg.paymentUrl && (
+                                            <Button
+                                                size="sm"
+                                                className="gap-1"
+                                                disabled={payingId === pg.id}
+                                                onClick={async () => {
+                                                    setPayingId(pg.id);
+                                                    try {
+                                                        const { data } = await apiPortal.get(`/pagamentos/${pg.id}/checkout`);
+                                                        window.location.assign(data.url);
+                                                    } catch {
+                                                        toast.error('Erro ao abrir página de pagamento');
+                                                        setPayingId(null);
+                                                    }
+                                                }}
+                                            >
+                                                {payingId === pg.id ? (
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                ) : (
+                                                    <>
+                                                        <CreditCard className="h-3 w-3" />
+                                                        Pagar
+                                                    </>
+                                                )}
+                                            </Button>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))

@@ -21,6 +21,15 @@ import { toast } from 'sonner';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { RichTextEditorCompact } from '../ui/rich-text-editor-compact';
 import { maskCurrency, unmaskCurrency } from '@/lib/masks';
+import { useAuth } from '@/hooks/useAuth';
+import { LayoutTemplate } from 'lucide-react';
+
+interface TemplateOption {
+    id: string;
+    name: string;
+    content: string;
+    value: number | null;
+}
 
 interface OrcamentoFormProps {
     orcamento?: Orcamento;
@@ -35,8 +44,11 @@ interface OrcamentoFormProps {
 }
 
 export function OrcamentoForm({ orcamento, solicitacao, onSubmit, isLoading }: OrcamentoFormProps) {
+    const { user } = useAuth();
+    const isPro = user?.plan === 'PRO' || user?.plan === 'ENTERPRISE';
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [loadingClientes, setLoadingClientes] = useState(false);
+    const [templates, setTemplates] = useState<TemplateOption[]>([]);
 
     const {
         register,
@@ -71,7 +83,33 @@ export function OrcamentoForm({ orcamento, solicitacao, onSubmit, isLoading }: O
 
     useEffect(() => {
         fetchClientes();
+        if (isPro && !orcamento) {
+            fetchTemplates();
+        }
     }, []);
+
+    const fetchTemplates = async () => {
+        try {
+            const response = await api.get('/templates', {
+                params: { type: 'PROPOSTA', active: 'true' },
+            });
+            setTemplates(response.data);
+        } catch {
+            // Silently fail — templates are optional
+        }
+    };
+
+    const applyTemplate = (templateId: string) => {
+        const template = templates.find(t => t.id === templateId);
+        if (!template) return;
+
+        setValue('title', template.name);
+        setValue('description', template.content);
+        if (template.value) {
+            setValue('value', String(template.value));
+        }
+        toast.success('Template aplicado');
+    };
 
     const fetchClientes = async () => {
         try {
@@ -89,6 +127,38 @@ export function OrcamentoForm({ orcamento, solicitacao, onSubmit, isLoading }: O
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Template Selector (PRO only, new orcamentos only) */}
+            {!orcamento && !solicitacao && (
+                <div className="space-y-2">
+                    {isPro && templates.length > 0 ? (
+                        <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <LayoutTemplate className="h-5 w-5 text-blue-600 shrink-0" />
+                            <div className="flex-1">
+                                <Select onValueChange={applyTemplate}>
+                                    <SelectTrigger className="bg-white">
+                                        <SelectValue placeholder="Usar template de proposta..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {templates.map(t => (
+                                            <SelectItem key={t.id} value={t.id}>
+                                                {t.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    ) : !isPro ? (
+                        <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            <LayoutTemplate className="h-5 w-5 text-slate-400 shrink-0" />
+                            <p className="text-sm text-slate-500">
+                                Upgrade para o plano PRO para usar templates de proposta
+                            </p>
+                        </div>
+                    ) : null}
+                </div>
+            )}
+
             <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Informações Básicas</h3>
 

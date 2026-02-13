@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Search, MoreVertical, Pencil, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, MoreVertical, Pencil, Trash2, Eye, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -45,6 +45,7 @@ import api from '@/lib/api';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { downloadFile } from '@/lib/download';
 
 export default function ClientesPage() {
     const router = useRouter();
@@ -101,10 +102,19 @@ export default function ClientesPage() {
                         Gerencie seus clientes e contatos
                     </p>
                 </div>
-                <Button onClick={handleNew}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Novo Cliente
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => downloadFile('/export/clientes', 'clientes.csv').catch(() => toast.error('Erro ao exportar'))}
+                    >
+                        <Download className="mr-2 h-4 w-4" />
+                        Exportar CSV
+                    </Button>
+                    <Button onClick={handleNew}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Novo Cliente
+                    </Button>
+                </div>
             </div>
 
             {/* Filtros */}

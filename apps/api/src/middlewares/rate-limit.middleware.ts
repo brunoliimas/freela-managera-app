@@ -13,10 +13,9 @@ export const authRateLimit = rateLimit({
 });
 
 // Rate limit geral para a API
-// 100 requisições por IP a cada 1 minuto
 export const apiRateLimit = rateLimit({
     windowMs: 60 * 1000, // 1 minuto
-    limit: 100,
+    limit: process.env.NODE_ENV === 'production' ? 100 : 500,
     message: {
         error: 'Limite de requisições excedido. Tente novamente em instantes.',
     },

@@ -81,6 +81,13 @@ jest.mock('../../utils/slugify', () => ({
     generateUniqueSlug: (...args: any[]) => mockGenerateUniqueSlug(...args),
 }));
 
+// Mock do billing service (importado pelo auth.service)
+jest.mock('../../services/billing.service', () => ({
+    BillingService: {
+        ensureCustomer: jest.fn().mockResolvedValue('cus_mock'),
+    },
+}));
+
 // Importar depois dos mocks
 import { register, login, logout, forgotPassword, resetPassword, getProfile, updateProfile } from '../../controllers/auth.controller';
 

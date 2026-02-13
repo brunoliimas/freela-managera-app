@@ -3,6 +3,7 @@ import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import logger from '../config/logger';
 import { NotificacaoService } from '../services/notificacao.service';
+import { CheckoutService } from '../services/checkout.service';
 
 export const getPagamentos = async (req: AuthRequest, res: Response) => {
     try {
@@ -399,6 +400,34 @@ export const getResumoFinanceiro = async (req: AuthRequest, res: Response) => {
         logger.error({ err: error }, 'Get resumo financeiro error');
         return res.status(500).json({
             error: 'Erro ao buscar resumo financeiro',
+        });
+    }
+};
+
+export const gerarLinkPagamento = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.userId!;
+        const { id } = req.params;
+
+        const pagamento = await prisma.pagamento.findFirst({
+            where: { id, userId },
+        });
+
+        if (!pagamento) {
+            return res.status(404).json({ error: 'Pagamento não encontrado' });
+        }
+
+        if (pagamento.status === 'PAGO') {
+            return res.status(400).json({ error: 'Este pagamento já foi pago' });
+        }
+
+        const { paymentUrl } = await CheckoutService.criarLinkPagamento(id);
+
+        return res.json({ paymentUrl });
+    } catch (error) {
+        logger.error({ err: error }, 'Gerar link pagamento error');
+        return res.status(500).json({
+            error: error instanceof Error ? error.message : 'Erro ao gerar link de pagamento',
         });
     }
 };

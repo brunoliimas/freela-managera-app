@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Eye, Pencil, Trash2, MoreVertical } from 'lucide-react';
+import { Plus, Eye, Pencil, Trash2, MoreVertical, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -44,6 +44,7 @@ import { formatDate, formatCurrency } from '@/lib/format';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { downloadFile } from '@/lib/download';
 
 const statusColors: Record<string, string> = {
     EM_ANDAMENTO: 'bg-blue-500',
@@ -136,10 +137,19 @@ export default function ProjetosPage() {
                         Gerencie seus projetos em andamento
                     </p>
                 </div>
-                <Button onClick={handleNew}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Novo Projeto
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => downloadFile('/export/projetos', 'projetos.csv').catch(() => toast.error('Erro ao exportar'))}
+                    >
+                        <Download className="mr-2 h-4 w-4" />
+                        Exportar CSV
+                    </Button>
+                    <Button onClick={handleNew}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Novo Projeto
+                    </Button>
+                </div>
             </div>
 
             <div className="flex gap-4">

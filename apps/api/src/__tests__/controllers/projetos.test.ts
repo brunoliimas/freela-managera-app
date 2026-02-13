@@ -17,7 +17,9 @@ const mockPrismaProjetoFindFirst = jest.fn();
 const mockPrismaProjetoCreate = jest.fn();
 const mockPrismaProjetoUpdate = jest.fn();
 const mockPrismaProjetoDelete = jest.fn();
+const mockPrismaProjetoCount = jest.fn();
 const mockPrismaOrcamentoFindFirst = jest.fn();
+const mockPrismaUserFindUnique = jest.fn();
 
 const mockPrismaInstance = {
     projeto: {
@@ -26,9 +28,13 @@ const mockPrismaInstance = {
         create: mockPrismaProjetoCreate,
         update: mockPrismaProjetoUpdate,
         delete: mockPrismaProjetoDelete,
+        count: mockPrismaProjetoCount,
     },
     orcamento: {
         findFirst: mockPrismaOrcamentoFindFirst,
+    },
+    user: {
+        findUnique: mockPrismaUserFindUnique,
     },
 };
 
@@ -228,6 +234,12 @@ describe('Projetos Controller', () => {
     });
 
     describe('createProjeto', () => {
+        beforeEach(() => {
+            // Default: user com plano FREE (limite de 5 projetos)
+            mockPrismaUserFindUnique.mockResolvedValue({ plan: 'FREE' });
+            mockPrismaProjetoCount.mockResolvedValue(0);
+        });
+
         it('deve criar um novo projeto', async () => {
             mockRequest.body = {
                 clienteId: 'cliente-1',

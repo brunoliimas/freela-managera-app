@@ -1,11 +1,18 @@
 import { Response } from 'express';
 import { AuthRequest } from '../../middlewares/auth.middleware';
 
+jest.mock('../../config/logger', () => ({
+    __esModule: true,
+    default: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+}));
+
 const mockPrismaClienteFindMany = jest.fn();
 const mockPrismaClienteFindFirst = jest.fn();
 const mockPrismaClienteCreate = jest.fn();
 const mockPrismaClienteUpdate = jest.fn();
 const mockPrismaClienteDelete = jest.fn();
+const mockPrismaClienteCount = jest.fn();
+const mockPrismaUserFindUnique = jest.fn();
 
 jest.mock('../../config/database', () => ({
     __esModule: true,
@@ -16,6 +23,10 @@ jest.mock('../../config/database', () => ({
             create: mockPrismaClienteCreate,
             update: mockPrismaClienteUpdate,
             delete: mockPrismaClienteDelete,
+            count: mockPrismaClienteCount,
+        },
+        user: {
+            findUnique: mockPrismaUserFindUnique,
         },
     },
 }));
@@ -200,6 +211,12 @@ describe('Clientes Controller', () => {
     });
 
     describe('createCliente', () => {
+        beforeEach(() => {
+            // Default: user com plano FREE (limite de 3 clientes)
+            mockPrismaUserFindUnique.mockResolvedValue({ plan: 'FREE' });
+            mockPrismaClienteCount.mockResolvedValue(0);
+        });
+
         it('deve criar um novo cliente', async () => {
             mockRequest.body = {
                 name: 'Novo Cliente',

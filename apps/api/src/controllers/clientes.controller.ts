@@ -4,6 +4,7 @@ import path from 'path';
 import prisma from '../config/database';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import logger from '../config/logger';
+import { PLAN_LIMITS } from '../config/plans';
 
 export const getClientes = async (req: AuthRequest, res: Response) => {
     try {
@@ -92,6 +93,22 @@ export const createCliente = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({
                 error: 'Nome e email são obrigatórios',
             });
+        }
+
+        // Verificar limite do plano
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { plan: true },
+        });
+        const limits = PLAN_LIMITS[user!.plan];
+        if (limits.maxClientes !== Infinity) {
+            const count = await prisma.cliente.count({ where: { userId } });
+            if (count >= limits.maxClientes) {
+                return res.status(403).json({
+                    error: `Limite de ${limits.maxClientes} clientes atingido no plano ${user!.plan}. Faça upgrade para adicionar mais.`,
+                    requiredPlan: 'PRO',
+                });
+            }
         }
 
         // Verificar se email já existe para este usuário

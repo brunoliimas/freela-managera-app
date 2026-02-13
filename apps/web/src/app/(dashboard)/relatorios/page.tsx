@@ -26,10 +26,12 @@ import {
     ResponsiveContainer,
     PieLabelRenderProps,
 } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, Clock, Target } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Clock, Target, Download, Wallet } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/format';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { downloadFile } from '@/lib/download';
 import type { RelatorioFinanceiro, ComparacaoAnual } from '@/types/relatorio';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -98,6 +100,14 @@ export default function RelatoriosPage() {
                         Análise financeira e métricas do negócio
                     </p>
                 </div>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => downloadFile(`/export/relatorio-financeiro?ano=${anoSelecionado}`, `relatorio-financeiro-${anoSelecionado}.csv`).catch(() => toast.error('Erro ao exportar'))}
+                    >
+                        <Download className="mr-2 h-4 w-4" />
+                        Exportar CSV
+                    </Button>
                 <Select value={anoSelecionado} onValueChange={setAnoSelecionado}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue />
@@ -110,6 +120,7 @@ export default function RelatoriosPage() {
                         ))}
                     </SelectContent>
                 </Select>
+                </div>
             </div>
 
             {/* Cards de Resumo */}
@@ -172,6 +183,73 @@ export default function RelatoriosPage() {
                                 <p className="text-sm text-slate-600">Tempo Médio</p>
                                 <p className="text-2xl font-bold text-slate-900">
                                     {relatorio.resumo.tempoMedioEntrega} dias
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Cards v1.3: Lucro, Despesas, Horas, Valor/hora */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-red-100 rounded-full">
+                                <Wallet className="h-6 w-6 text-red-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-slate-600">Total Despesas</p>
+                                <p className="text-2xl font-bold text-slate-900">
+                                    {formatCurrency(relatorio.resumo.totalDespesas || 0)}
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="flex items-center gap-3">
+                            <div className={`p-3 rounded-full ${(relatorio.resumo.lucroLiquido || 0) >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+                                <DollarSign className={`h-6 w-6 ${(relatorio.resumo.lucroLiquido || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                            </div>
+                            <div>
+                                <p className="text-sm text-slate-600">Lucro Líquido</p>
+                                <p className={`text-2xl font-bold ${(relatorio.resumo.lucroLiquido || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {formatCurrency(relatorio.resumo.lucroLiquido || 0)}
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-indigo-100 rounded-full">
+                                <Clock className="h-6 w-6 text-indigo-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-slate-600">Horas Trabalhadas</p>
+                                <p className="text-2xl font-bold text-slate-900">
+                                    {relatorio.resumo.totalHoras || 0}h
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-amber-100 rounded-full">
+                                <Target className="h-6 w-6 text-amber-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-slate-600">Valor/Hora Efetivo</p>
+                                <p className="text-2xl font-bold text-slate-900">
+                                    {formatCurrency(relatorio.resumo.valorHoraEfetivo || 0)}
                                 </p>
                             </div>
                         </div>

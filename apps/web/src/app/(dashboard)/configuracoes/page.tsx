@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Settings } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProfileSection } from './components/ProfileSection';
 import { CompanySection } from './components/CompanySection';
 import { PreferencesSection } from './components/PreferencesSection';
 import { SecuritySection } from './components/SecuritySection';
+import { SubscriptionSection } from './components/SubscriptionSection';
+import { FiscalSection } from './components/FiscalSection';
 import api from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,12 +27,24 @@ interface UserProfile {
     plan: string;
     avatar: string | null;
     createdAt: string;
+    stripeAccountStatus?: string | null;
+    subscriptionStatus?: string | null;
+    currentPeriodEnd?: string | null;
+    // Fiscal
+    enotasEmpresaId?: string | null;
+    cnae?: string | null;
+    issAliquota?: number | null;
+    inscricaoMunicipal?: string | null;
+    regimeTributario?: number | null;
+    codigoServico?: string | null;
 }
 
 export default function ConfiguracoesPage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const { setUser } = useAuth();
+    const searchParams = useSearchParams();
+    const defaultTab = searchParams.get('tab') || 'perfil';
 
     useEffect(() => {
         fetchProfile();
@@ -96,10 +111,12 @@ export default function ConfiguracoesPage() {
                 </div>
             </div>
 
-            <Tabs defaultValue="perfil" className="w-full">
+            <Tabs defaultValue={defaultTab} className="w-full">
                 <TabsList>
                     <TabsTrigger value="perfil">Perfil</TabsTrigger>
                     <TabsTrigger value="empresa">Empresa</TabsTrigger>
+                    <TabsTrigger value="assinatura">Assinatura</TabsTrigger>
+                    <TabsTrigger value="fiscal">Fiscal</TabsTrigger>
                     <TabsTrigger value="preferencias">Preferências</TabsTrigger>
                     <TabsTrigger value="seguranca">Segurança</TabsTrigger>
                 </TabsList>
@@ -110,6 +127,14 @@ export default function ConfiguracoesPage() {
 
                 <TabsContent value="empresa" className="mt-6">
                     <CompanySection profile={profile} onUpdate={handleProfileUpdate} />
+                </TabsContent>
+
+                <TabsContent value="assinatura" className="mt-6">
+                    <SubscriptionSection profile={profile} />
+                </TabsContent>
+
+                <TabsContent value="fiscal" className="mt-6">
+                    <FiscalSection />
                 </TabsContent>
 
                 <TabsContent value="preferencias" className="mt-6">

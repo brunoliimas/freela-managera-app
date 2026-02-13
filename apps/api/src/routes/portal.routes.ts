@@ -11,6 +11,7 @@ import {
     responderOrcamento,
     getMeusPagamentos,
     criarSolicitacao,
+    checkoutPagamento,
 } from '../controllers/portal.controller';
 
 const router = Router();
@@ -27,6 +28,7 @@ router.get('/projetos/:id', clientAuthMiddleware, getMeuProjeto);
 router.get('/orcamentos', clientAuthMiddleware, getMeusOrcamentos);
 router.patch('/orcamentos/:id/responder', clientAuthMiddleware, responderOrcamento);
 router.get('/pagamentos', clientAuthMiddleware, getMeusPagamentos);
+router.get('/pagamentos/:id/checkout', clientAuthMiddleware, checkoutPagamento);
 router.post('/solicitacoes', clientAuthMiddleware, criarSolicitacao);
 
 export default router;

@@ -40,8 +40,10 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { FileUpload } from '@/components/arquivos/FileUpload';
 import { FileList } from '@/components/arquivos/FileList';
-import { FileIcon, Upload as UploadIcon } from 'lucide-react';
+import { FileIcon, Upload as UploadIcon, MessageSquare } from 'lucide-react';
 import { RichTextDisplay } from '@/components/ui/rich-text-display';
+import { ComentariosSection } from '@/components/projetos/ComentariosSection';
+import { useAuth } from '@/hooks/useAuth';
 
 const statusColors: Record<string, string> = {
     EM_ANDAMENTO: 'bg-blue-500',
@@ -70,6 +72,7 @@ export default function ProjetoDetailsPage({
 }) {
     const router = useRouter();
     const { id } = use(params);
+    const { user } = useAuth();
     const [projeto, setProjeto] = useState<Projeto | null>(null);
     const [loading, setLoading] = useState(true);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -551,6 +554,19 @@ export default function ProjetoDetailsPage({
                             />
                         ))
                     )}
+                </CardContent>
+            </Card>
+
+            {/* Comentários */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5" />
+                        Comentários
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ComentariosSection projetoId={id} currentUserId={user?.id} />
                 </CardContent>
             </Card>
 

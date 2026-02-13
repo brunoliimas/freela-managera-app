@@ -10,7 +10,8 @@ import {
     AlertCircle,
     TrendingUp,
     CheckCircle2,
-    Clock
+    Clock,
+    Wallet,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -205,6 +206,40 @@ export default function DashboardPage() {
                         </p>
                         <p className="text-xs text-slate-500 mt-1">
                             {data.stats.projetos.concluidos} projetos finalizados
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-medium flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-indigo-500" />
+                            Horas esta semana
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-2xl font-bold text-slate-900">
+                            {data.stats.timeTracking?.horasEstaSemana || 0}h
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                            Time tracking
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-medium flex items-center gap-2">
+                            <Wallet className="h-4 w-4 text-red-500" />
+                            Despesas este mês
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-2xl font-bold text-slate-900">
+                            {formatCurrency(data.stats.despesas?.totalEsteMes || 0)}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                            Gastos no mês atual
                         </p>
                     </CardContent>
                 </Card>

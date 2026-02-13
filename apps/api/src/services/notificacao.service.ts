@@ -11,6 +11,8 @@ import {
     templateProjetoIniciadoCliente,
     templateMilestoneConcluidoCliente,
     templateNovoArquivoCliente,
+    templateNFSeAutorizada,
+    templateNFSeRejeitada,
 } from '../templates/email-templates';
 import prisma from '../config/database';
 import logger from '../config/logger';
@@ -659,6 +661,102 @@ export class NotificacaoService {
             logger.info({ count: pagamentosVencidos.length }, 'Alertas de pagamento vencido para cliente enviados');
         } catch (error) {
             logger.error({ err: error }, 'Erro ao verificar pagamentos vencidos do cliente');
+        }
+    }
+
+    // ============================================
+    // NFS-e NOTIFICAÇÕES
+    // ============================================
+
+    static async notificarNFSeAutorizada(notaFiscalId: string) {
+        try {
+            const notaFiscal = await prisma.notaFiscal.findUnique({
+                where: { id: notaFiscalId },
+                include: {
+                    user: true,
+                    pagamento: {
+                        include: {
+                            projeto: {
+                                include: { cliente: true },
+                            },
+                        },
+                    },
+                },
+            });
+
+            if (!notaFiscal) return;
+
+            const html = templateNFSeAutorizada({
+                numero: notaFiscal.numero || 'N/A',
+                descricao: notaFiscal.descricaoServico,
+                valor: this.formatCurrency(notaFiscal.valor.toNumber()),
+                clienteNome: notaFiscal.pagamento.projeto.cliente.name,
+                projetoTitulo: notaFiscal.pagamento.projeto.title,
+            });
+
+            await sendEmail({
+                to: notaFiscal.user.email,
+                subject: `NFS-e Autorizada: ${notaFiscal.numero || 'Nova nota'}`,
+                html,
+            });
+
+            await this.criarNotificacaoInApp({
+                userId: notaFiscal.userId,
+                type: 'NFSE_AUTORIZADA',
+                title: 'NFS-e autorizada',
+                message: `Nota ${notaFiscal.numero} - ${notaFiscal.pagamento.projeto.cliente.name} (${this.formatCurrency(notaFiscal.valor.toNumber())})`,
+                link: '/notas-fiscais',
+            });
+
+            logger.info('Notificação de NFS-e autorizada enviada');
+        } catch (error) {
+            logger.error({ err: error }, 'Erro ao notificar NFS-e autorizada');
+        }
+    }
+
+    static async notificarNFSeRejeitada(notaFiscalId: string) {
+        try {
+            const notaFiscal = await prisma.notaFiscal.findUnique({
+                where: { id: notaFiscalId },
+                include: {
+                    user: true,
+                    pagamento: {
+                        include: {
+                            projeto: {
+                                include: { cliente: true },
+                            },
+                        },
+                    },
+                },
+            });
+
+            if (!notaFiscal) return;
+
+            const html = templateNFSeRejeitada({
+                descricao: notaFiscal.descricaoServico,
+                valor: this.formatCurrency(notaFiscal.valor.toNumber()),
+                clienteNome: notaFiscal.pagamento.projeto.cliente.name,
+                projetoTitulo: notaFiscal.pagamento.projeto.title,
+                motivo: notaFiscal.motivoRejeicao || 'Motivo não informado',
+            });
+
+            await sendEmail({
+                to: notaFiscal.user.email,
+                subject: `NFS-e Rejeitada - ${notaFiscal.pagamento.projeto.cliente.name}`,
+                html,
+            });
+
+            await this.criarNotificacaoInApp({
+                userId: notaFiscal.userId,
+                type: 'NFSE_REJEITADA',
+                title: 'NFS-e rejeitada',
+                message: `${notaFiscal.pagamento.projeto.cliente.name} - ${notaFiscal.motivoRejeicao || 'Verifique os dados fiscais'}`,
+                link: '/notas-fiscais',
+            });
+
+            logger.info('Notificação de NFS-e rejeitada enviada');
+        } catch (error) {
+            logger.error({ err: error }, 'Erro ao notificar NFS-e rejeitada');
         }
     }
 }

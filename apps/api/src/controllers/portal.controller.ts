@@ -365,6 +365,7 @@ export const getMeusPagamentos = async (req: ClientAuthRequest, res: Response) =
                 paidAt: true,
                 status: true,
                 method: true,
+                paymentUrl: true,
                 projeto: {
                     select: { number: true, title: true },
                 },
@@ -385,6 +386,40 @@ export const getMeusPagamentos = async (req: ClientAuthRequest, res: Response) =
     } catch (error) {
         logger.error({ err: error }, 'Erro ao buscar pagamentos do portal');
         return res.status(500).json({ error: 'Erro ao buscar pagamentos' });
+    }
+};
+
+// ==================== CHECKOUT (PAGAMENTO ONLINE) ====================
+
+export const checkoutPagamento = async (req: ClientAuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        // Verifica se pagamento pertence a um projeto deste cliente
+        const pagamento = await prisma.pagamento.findFirst({
+            where: {
+                id,
+                projeto: { clienteId: req.clienteId! },
+            },
+            select: { id: true, status: true, paymentUrl: true },
+        });
+
+        if (!pagamento) {
+            return res.status(404).json({ error: 'Pagamento não encontrado' });
+        }
+
+        if (pagamento.status === 'PAGO') {
+            return res.status(400).json({ error: 'Este pagamento já foi pago' });
+        }
+
+        if (!pagamento.paymentUrl) {
+            return res.status(400).json({ error: 'Link de pagamento ainda não foi gerado pelo freelancer' });
+        }
+
+        return res.json({ url: pagamento.paymentUrl });
+    } catch (error) {
+        logger.error({ err: error }, 'Erro no checkout do portal');
+        return res.status(500).json({ error: 'Erro ao processar checkout' });
     }
 };
 

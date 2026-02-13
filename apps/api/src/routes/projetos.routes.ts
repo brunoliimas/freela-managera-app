@@ -13,6 +13,12 @@ import {
     updateMilestone,
     deleteMilestone,
 } from '../controllers/milestones.controller';
+import {
+    getComentarios,
+    createComentario,
+    updateComentario,
+    deleteComentario,
+} from '../controllers/comentarios.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
 import { createProjetoSchema, createProjetoFromOrcamentoSchema, createMilestoneSchema } from '../validations/projetos.validations';
@@ -32,5 +38,11 @@ router.get('/:projetoId/milestones', getMilestones);
 router.post('/:projetoId/milestones', validate(createMilestoneSchema), createMilestone);
 router.put('/:projetoId/milestones/:id', updateMilestone);
 router.delete('/:projetoId/milestones/:id', deleteMilestone);
+
+// Comentários
+router.get('/:projetoId/comentarios', getComentarios);
+router.post('/:projetoId/comentarios', createComentario);
+router.put('/:projetoId/comentarios/:id', updateComentario);
+router.delete('/:projetoId/comentarios/:id', deleteComentario);
 
 export default router;

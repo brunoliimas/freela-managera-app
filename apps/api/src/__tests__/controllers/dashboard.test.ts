@@ -15,6 +15,8 @@ const mockPrismaOrcamentoAggregate = jest.fn();
 const mockPrismaProjetoCount = jest.fn();
 const mockPrismaProjetoFindMany = jest.fn();
 const mockPrismaProjetoAggregate = jest.fn();
+const mockPrismaTimeEntryAggregate = jest.fn();
+const mockPrismaDespesaAggregate = jest.fn();
 
 jest.mock('../../config/database', () => ({
     __esModule: true,
@@ -35,6 +37,12 @@ jest.mock('../../config/database', () => ({
             count: mockPrismaProjetoCount,
             findMany: mockPrismaProjetoFindMany,
             aggregate: mockPrismaProjetoAggregate,
+        },
+        timeEntry: {
+            aggregate: mockPrismaTimeEntryAggregate,
+        },
+        despesa: {
+            aggregate: mockPrismaDespesaAggregate,
         },
     },
 }));
@@ -84,6 +92,10 @@ describe('Dashboard Controller', () => {
             mockPrismaProjetoAggregate.mockResolvedValueOnce({ _sum: { value: 40000 } }); // andamento
             mockPrismaProjetoAggregate.mockResolvedValueOnce({ _sum: { value: 60000 } }); // concluidos
 
+            // Mock time tracking + despesas
+            mockPrismaTimeEntryAggregate.mockResolvedValue({ _sum: { duration: 480 } });
+            mockPrismaDespesaAggregate.mockResolvedValue({ _sum: { value: { toNumber: () => 1500 } } });
+
             await getDashboard(mockRequest as AuthRequest, mockResponse as Response);
 
             expect(mockResponse.json).toHaveBeenCalledWith({
@@ -98,6 +110,13 @@ describe('Dashboard Controller', () => {
                         valorTotal: 100000,
                         valorAndamento: 40000,
                         valorConcluidos: 60000,
+                    },
+                    timeTracking: {
+                        horasEstaSemana: 8,
+                        minutosEstaSemana: 480,
+                    },
+                    despesas: {
+                        totalEsteMes: 1500,
                     },
                 },
                 recentes: {
@@ -124,6 +143,10 @@ describe('Dashboard Controller', () => {
             mockPrismaOrcamentoAggregate.mockResolvedValue({ _sum: { value: null } });
             mockPrismaProjetoAggregate.mockResolvedValue({ _sum: { value: null } });
 
+            // Mock time tracking + despesas - null sums
+            mockPrismaTimeEntryAggregate.mockResolvedValue({ _sum: { duration: null } });
+            mockPrismaDespesaAggregate.mockResolvedValue({ _sum: { value: null } });
+
             await getDashboard(mockRequest as AuthRequest, mockResponse as Response);
 
             expect(mockResponse.json).toHaveBeenCalledWith({
@@ -138,6 +161,13 @@ describe('Dashboard Controller', () => {
                         valorTotal: 0,
                         valorAndamento: 0,
                         valorConcluidos: 0,
+                    },
+                    timeTracking: {
+                        horasEstaSemana: 0,
+                        minutosEstaSemana: 0,
+                    },
+                    despesas: {
+                        totalEsteMes: 0,
                     },
                 },
                 recentes: {

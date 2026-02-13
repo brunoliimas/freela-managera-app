@@ -127,6 +127,32 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
             },
         });
 
+        // Time tracking - horas esta semana
+        const now = new Date();
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const horasEstaSemana = await prisma.timeEntry.aggregate({
+            where: {
+                userId,
+                startTime: { gte: startOfWeek },
+                endTime: { not: null },
+            },
+            _sum: { duration: true },
+        });
+
+        // Despesas este mês
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        const despesasEsteMes = await prisma.despesa.aggregate({
+            where: {
+                userId,
+                date: { gte: startOfMonth },
+            },
+            _sum: { value: true },
+        });
+
         return res.json({
             stats: {
                 clientes: {
@@ -150,6 +176,13 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
                     valorTotal: valoresProjetos._sum.value || 0,
                     valorAndamento: valorProjetosAndamento._sum.value || 0,
                     valorConcluidos: valorProjetosConcluidos._sum.value || 0,
+                },
+                timeTracking: {
+                    horasEstaSemana: Number(((horasEstaSemana._sum.duration || 0) / 60).toFixed(1)),
+                    minutosEstaSemana: horasEstaSemana._sum.duration || 0,
+                },
+                despesas: {
+                    totalEsteMes: despesasEsteMes._sum.value?.toNumber() || 0,
                 },
             },
             recentes: {

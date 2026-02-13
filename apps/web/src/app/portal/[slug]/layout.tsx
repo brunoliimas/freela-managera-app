@@ -65,7 +65,7 @@ export default function PortalLayout({ children, params }: { children: React.Rea
         <div className="flex h-screen bg-slate-50">
             <PortalSidebar slug={slug} />
             <div className="flex-1 ml-64 flex flex-col">
-                <header className="h-14 border-b border-slate-200 bg-white flex items-center px-6 shrink-0">
+                <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-end px-6 shrink-0">
                     <Breadcrumb homeLabel="Início" homeHref={`/portal/${slug}`} portalSlug={slug} />
                 </header>
                 <main className="flex-1 overflow-y-auto">

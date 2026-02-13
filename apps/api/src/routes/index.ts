@@ -11,6 +11,12 @@ import relatoriosRoutes from './relatorios.routes';
 import calendarioRoutes from './calendario.routes';
 import notificacoesRoutes from './notificacoes.routes';
 import portalRoutes from './portal.routes';
+import billingRoutes from './billing.routes';
+import nfseRoutes from './nfse.routes';
+import exportRoutes from './export.routes';
+import timeEntriesRoutes from './time-entries.routes';
+import despesasRoutes from './despesas.routes';
+import templatesRoutes from './templates.routes';
 
 const router = Router();
 
@@ -26,5 +32,11 @@ router.use('/relatorios', relatoriosRoutes);
 router.use('/calendario', calendarioRoutes);
 router.use('/notificacoes', notificacoesRoutes);
 router.use('/portal', portalRoutes);
+router.use('/billing', billingRoutes);
+router.use('/notas-fiscais', nfseRoutes);
+router.use('/export', exportRoutes);
+router.use('/time-entries', timeEntriesRoutes);
+router.use('/despesas', despesasRoutes);
+router.use('/templates', templatesRoutes);
 
 export default router;
